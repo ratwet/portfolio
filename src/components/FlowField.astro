@@ -1,0 +1,154 @@
+<!--
+  Quiet vector flow field - the site's single dynamic-background element.
+  Short ticks drift along a slow mathematical field, drawn in --color-ink at
+  low opacity with occasional --color-signal highlights.
+
+  Discipline:
+  - prefers-reduced-motion renders ONE static frame, never an empty section
+  - boots on idle after first paint, so it never blocks LCP
+  - IntersectionObserver pauses the loop when scrolled out of view
+  - particle count and devicePixelRatio are both capped
+  - torn down on astro:before-swap so navigations don't leak RAF loops
+-->
+<canvas class="hero-field" data-flow-field aria-hidden="true"></canvas>
+
+<script>
+  type Particle = { x: number; y: number; life: number; signal: boolean };
+
+  class FlowField {
+    canvas: HTMLCanvasElement;
+    ctx: CanvasRenderingContext2D;
+    particles: Particle[] = [];
+    w = 0;
+    h = 0;
+    running = false;
+    raf = 0;
+    reduced: boolean;
+    io?: IntersectionObserver;
+    onResize: () => void;
+
+    constructor(canvas: HTMLCanvasElement) {
+      this.canvas = canvas;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('2d context unavailable');
+      this.ctx = ctx;
+      this.reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      this.resize();
+      this.seed();
+
+      this.onResize = () => {
+        this.resize();
+        this.seed();
+        if (this.reduced) this.staticFrame();
+      };
+      window.addEventListener('resize', this.onResize);
+
+      if (this.reduced) {
+        this.staticFrame();
+        return;
+      }
+
+      this.io = new IntersectionObserver(
+        (entries) => (entries[0]?.isIntersecting ? this.start() : this.stop()),
+        { threshold: 0 }
+      );
+      this.io.observe(canvas);
+    }
+
+    colors() {
+      const s = getComputedStyle(document.documentElement);
+      return {
+        ink: s.getPropertyValue('--color-ink').trim() || '#191b20',
+        signal: s.getPropertyValue('--color-signal').trim() || '#2d4fb0',
+      };
+    }
+
+    resize() {
+      const parent = this.canvas.parentElement;
+      if (!parent) return;
+      const rect = parent.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      this.canvas.width = Math.max(1, Math.round(rect.width * dpr));
+      this.canvas.height = Math.max(1, Math.round(rect.height * dpr));
+      this.canvas.style.width = rect.width + 'px';
+      this.canvas.style.height = rect.height + 'px';
+      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      this.w = rect.width;
+      this.h = rect.height;
+    }
+
+    spawn(): Particle {
+      return { x: Math.random() * this.w, y: Math.random() * this.h, life: 80 + Math.random() * 160, signal: Math.random() < 0.07 };
+    }
+
+    seed() {
+      const count = Math.min(Math.round((this.w * this.h) / 11000), 120);
+      this.particles = Array.from({ length: count }, () => this.spawn());
+    }
+
+    angleAt(x: number, y: number, t: number) {
+      return (Math.sin(x * 0.0032 + t * 0.00011) + Math.cos(y * 0.0042 - t * 0.00008)) * Math.PI;
+    }
+
+    step(t: number) {
+      const { ink, signal } = this.colors();
+      const ctx = this.ctx;
+      ctx.clearRect(0, 0, this.w, this.h);
+      for (const p of this.particles) {
+        const a = this.angleAt(p.x, p.y, t);
+        const nx = p.x + Math.cos(a) * 0.4;
+        const ny = p.y + Math.sin(a) * 0.4;
+        ctx.strokeStyle = p.signal ? signal : ink;
+        ctx.globalAlpha = p.signal ? 0.32 : 0.12;
+        ctx.lineWidth = 1.1;
+        ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(nx, ny); ctx.stroke();
+        p.x = nx; p.y = ny; p.life -= 1;
+        if (p.x < 0 || p.x > this.w || p.y < 0 || p.y > this.h || p.life <= 0) Object.assign(p, this.spawn());
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    staticFrame() {
+      const { ink, signal } = this.colors();
+      const ctx = this.ctx;
+      ctx.clearRect(0, 0, this.w, this.h);
+      for (const p of this.particles) {
+        let { x, y } = p;
+        ctx.strokeStyle = p.signal ? signal : ink;
+        ctx.globalAlpha = p.signal ? 0.3 : 0.11;
+        ctx.lineWidth = 1.1;
+        ctx.beginPath(); ctx.moveTo(x, y);
+        for (let i = 0; i < 26; i++) {
+          const a = this.angleAt(x, y, 0); x += Math.cos(a) * 1.6; y += Math.sin(a) * 1.6; ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    start() {
+      if (this.running || this.reduced) return;
+      this.running = true;
+      const loop = (t: number) => { if (!this.running) return; this.step(t); this.raf = requestAnimationFrame(loop); };
+      this.raf = requestAnimationFrame(loop);
+    }
+
+    stop() { this.running = false; if (this.raf) cancelAnimationFrame(this.raf); this.raf = 0; }
+    destroy() { this.stop(); this.io?.disconnect(); window.removeEventListener('resize', this.onResize); }
+  }
+
+  let instance: FlowField | null = null;
+  function boot() {
+    const canvas = document.querySelector<HTMLCanvasElement>('[data-flow-field]');
+    if (!canvas || canvas.dataset.booted === 'true') return;
+    canvas.dataset.booted = 'true'; instance = new FlowField(canvas);
+  }
+  function schedule() {
+    if ('requestIdleCallback' in window) (window as any).requestIdleCallback(boot, { timeout: 1200 });
+    else setTimeout(boot, 200);
+  }
+  schedule();
+  document.addEventListener('astro:page-load', schedule);
+  document.addEventListener('astro:before-swap', () => { instance?.destroy(); instance = null; });
+</script>
