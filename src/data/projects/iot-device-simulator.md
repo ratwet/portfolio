@@ -20,8 +20,8 @@ A simulated supply-chain tracking device on an ESP32, modelling what a real logi
 
 ## Technical notes
 
-- Local status display on an SSD1306 OLED, plus an RGB LED that signals connection state at a glance — yellow while joining WiFi, blue while connecting to MQTT, green once publishing, red on error
-- If a sensor read fails, the system reuses the last valid reading rather than dropping the telemetry stream — a small decision, but it matters: a real field device doesn't get to just skip a report
+- Local status display on an SSD1306 OLED, plus an RGB LED that signals connection state at a glance: yellow while joining WiFi, blue while connecting to MQTT, green once publishing, red on error
+- If a sensor read fails, the system reuses the last valid reading rather than dropping the telemetry stream. A real field device doesn't get to just skip a report
 - PubSubClient for MQTT, ArduinoJson for payload serialization, Adafruit SSD1306/GFX for the display stack
 - Built and tested in Wokwi's ESP32 simulator against a public HiveMQ broker
 
