@@ -18,15 +18,15 @@ sortOrder: 20
 
 ## What it is
 
-A real-time human-computer interaction system that replaces the mouse with a webcam. Pointing moves the cursor, pinching clicks, a peace sign scrolls, a fist freezes tracking — all running locally on a laptop CPU, no GPU and no training step.
+A real-time human-computer interaction system that replaces the mouse with a webcam. Pointing moves the cursor, pinching clicks, a peace sign scrolls, a fist freezes tracking. Everything runs locally on a laptop CPU, with no GPU and no training step.
 
 ## Technical notes
 
 - MediaPipe HandLandmarker tracks 21 3D points per hand; index-finger position drives the cursor
-- Thumb–index pinch is left click, thumb–middle pinch is right click, a peace sign scrolls, a fist freezes input
-- Raw landmark positions are jittery frame to frame, so movement goes through a weighted moving average over the last 6 frames plus a velocity cap that blocks sudden jumps — roughly 60% less jitter than using raw landmarks directly
+- Thumb-index pinch is left click, thumb-middle pinch is right click, a peace sign scrolls, a fist freezes input
+- Raw landmark positions are jittery frame to frame, so movement goes through a weighted moving average over the last 6 frames plus a velocity cap that blocks sudden jumps. This gives roughly 60% less jitter than using raw landmarks directly
 - Target platform is Wayland on Ubuntu, where the usual approach (PyAutoGUI via X11's XTEST) doesn't work. Cursor and click events are instead injected at the kernel level through Linux's `uinput` module via `evdev`, which operates below the display server and works across any Wayland compositor
-- Python, MediaPipe, OpenCV, evdev, NumPy — six single-responsibility modules
+- Python, MediaPipe, OpenCV, evdev, NumPy - six single-responsibility modules
 
 ## Evidence
 
@@ -34,4 +34,4 @@ Tested end to end on a Dell Latitude 5420 (Intel Core i5-1145G7, 8GB RAM, Ubuntu
 
 ## Next iteration
 
-Document the measured tradeoffs between smoothing window size, cursor responsiveness, and CPU load — right now those are hand-tuned in `config.py` rather than benchmarked.
+Document the measured tradeoffs between smoothing window size, cursor responsiveness, and CPU load. Right now those are hand-tuned in `config.py` rather than benchmarked.
