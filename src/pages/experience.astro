@@ -1,0 +1,6 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+const experience=(await getCollection('experience')).sort((a,b)=>a.data.sortOrder-b.data.sortOrder);
+---
+<BaseLayout title="Experience" description="Experience in technical mentorship and applied AI and machine learning work."><section class="wrap"><p class="hero-eyebrow">Experience</p><h1 class="hero-headline" style="max-width:22ch;">Work that has taught me how systems behave.</h1><p class="hero-sub">A concise record of technical mentorship and applied AI work. I keep the description close to what I actually built and learned.</p></section><section class="wrap">{experience.map(entry=><div class="entry"><div class="entry-meta">{entry.data.start}{entry.data.end?` – ${entry.data.end}`:' – present'}{entry.data.location&&<><br/>{entry.data.location}</>}</div><div><h2 class="entry-title">{entry.data.role}</h2><p class="entry-org">{entry.data.org}</p><ul>{entry.data.highlights.map(h=><li>{h}</li>)}</ul></div></div>)}</section></BaseLayout>
