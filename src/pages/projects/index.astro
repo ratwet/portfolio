@@ -1,0 +1,11 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+const allProjects=(await getCollection('projects')).sort((a,b)=>a.data.sortOrder-b.data.sortOrder);
+const categories=['All','Edge & IoT','Computer Vision','Robotics'];
+---
+<BaseLayout title="Work" description="Selected projects by Kaushal Kumar across computer vision, embedded systems, machine learning, and robotics.">
+<section class="wrap"><p class="hero-eyebrow">Work</p><h1 class="hero-headline" style="max-width:22ch;">Builds that are easier to inspect than to hype.</h1><p class="hero-sub">The archive is organized around what each system does, why it's interesting, and what another developer can inspect in the repository.</p></section>
+<section class="wrap"><div class="filter-tabs" id="filter-tabs" role="tablist" aria-label="Filter by category">{categories.map((cat,i)=><button class="filter-tab" data-filter={cat} aria-current={i===0?'true':'false'}>{cat}</button>)}</div><div class="work-list" id="work-list">{allProjects.map(project=><div class="work-item" data-category={project.data.category}><div class="work-item-main"><span class="label">{project.data.category} · {project.data.year} · {project.data.status}</span><h2 class="work-item-title"><a href={`/projects/${project.id}/`} style="text-decoration:none;color:inherit;">{project.data.title}</a></h2><p class="work-item-summary">{project.data.summary}</p><p style="margin-top:var(--space-4);display:flex;gap:var(--space-4);"><a class="btn btn-secondary" href={`/projects/${project.id}/`}>Open case study ↗</a>{project.data.repoUrl&&<a class="btn btn-secondary" href={project.data.repoUrl} target="_blank" rel="noopener noreferrer">GitHub ↗</a>}</p></div></div>)}</div></section>
+</BaseLayout>
+<script>const tabs=document.querySelectorAll<HTMLButtonElement>('#filter-tabs .filter-tab');const items=document.querySelectorAll<HTMLElement>('#work-list .work-item');tabs.forEach(tab=>tab.addEventListener('click',()=>{const filter=tab.dataset.filter;tabs.forEach(t=>t.setAttribute('aria-current','false'));tab.setAttribute('aria-current','true');items.forEach(item=>item.style.display=filter==='All'||item.dataset.category===filter?'':'none')}));</script>
