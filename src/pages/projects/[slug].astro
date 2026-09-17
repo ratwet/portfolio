@@ -1,11 +1,27 @@
 ---
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-export async function getStaticPaths(){const projects=await getCollection('projects');return projects.map(project=>({params:{slug:project.id},props:{project}}));}
-const {project}=Astro.props;const {Content}=await render(project);
+
+export async function getStaticPaths(){
+  const projects = await getCollection('projects');
+  return projects.map((project) => ({ params: { slug: project.id }, props: { project } }));
+}
+
+const { project } = Astro.props;
+const { Content } = await render(project);
+const projectSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareSourceCode',
+  name: project.data.title,
+  description: project.data.summary,
+  url: new URL(`/projects/${project.id}/`, Astro.site).toString(),
+  codeRepository: project.data.repoUrl,
+  author: { '@type': 'Person', name: 'Kaushal Kumar', url: 'https://ratwet.github.io' },
+  keywords: project.data.category,
+};
 ---
-<BaseLayout title={project.data.title} description={project.data.summary}>
-<section class="wrap"><span class="label">{project.data.category} · {project.data.year} · {project.data.status}</span><h1 class="hero-headline" style="max-width:24ch;margin-top:var(--space-4);">{project.data.title}</h1><p class="hero-sub">{project.data.summary}</p><div class="hero-actions">{project.data.repoUrl&&<a class="btn btn-primary" href={project.data.repoUrl} target="_blank" rel="noopener noreferrer">View repository ↗</a>}<a class="btn btn-secondary" href="/projects/">Back to work</a></div>{project.data.metrics&&project.data.metrics.length>0&&<div class="meta-row" style="margin-top:var(--space-12);">{project.data.metrics.map(m=><div class="meta-col"><span class="label">{m.label}</span><p style="font-size:var(--step-2);">{m.value}</p></div>)}</div>}</section>
+<BaseLayout title={project.data.title} description={project.data.summary} structuredData={projectSchema}>
+<section class="wrap"><span class="label">{project.data.category} · {project.data.year} · {project.data.status}</span><h1 class="hero-headline" style="max-width:24ch;margin-top:var(--space-4);">{project.data.title}</h1><p class="hero-sub">{project.data.summary}</p><div class="hero-actions">{project.data.repoUrl&&<a class="btn btn-primary" href={project.data.repoUrl} target="_blank" rel="noopener noreferrer" aria-label={`View ${project.data.title} repository (opens in new tab)`}>View repository ↗</a>}<a class="btn btn-secondary" href="/projects/">Back to work</a></div>{project.data.metrics&&project.data.metrics.length>0&&<div class="meta-row" style="margin-top:var(--space-12);">{project.data.metrics.map(m=><div class="meta-col"><span class="label">{m.label}</span><p style="font-size:var(--step-2);">{m.value}</p></div>)}</div>}</section>
 <section class="wrap"><div class="prose-wrap case-study-body"><Content /></div></section>
 </BaseLayout>
 <style>.case-study-body :global(h2){font-size:var(--step-2);margin-top:var(--space-12);margin-bottom:var(--space-4)}.case-study-body :global(h2:first-child){margin-top:0}.case-study-body :global(p){color:var(--color-ink-dim);margin-bottom:var(--space-4)}.case-study-body :global(ul){display:flex;flex-direction:column;gap:var(--space-2);margin-bottom:var(--space-4)}.case-study-body :global(li){position:relative;padding-left:var(--space-4);color:var(--color-ink-dim)}.case-study-body :global(li::before){content:'';position:absolute;left:0;top:.65em;width:4px;height:4px;background:var(--color-signal);border-radius:50%}.case-study-body :global(code){font-family:var(--font-mono);font-size:.9em;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:.1em .4em}</style>
