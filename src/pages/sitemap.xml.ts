@@ -1,4 +1,0 @@
-import { getCollection } from 'astro:content';
-const SITE='https://ratwet.github.io';
-const staticPaths=[{path:'/',priority:'1.0'},{path:'/about/',priority:'0.8'},{path:'/projects/',priority:'0.9'},{path:'/experience/',priority:'0.8'},{path:'/media/',priority:'0.6'},{path:'/contact/',priority:'0.7'}];
-export async function GET(){const projects=await getCollection('projects');const today=new Date().toISOString().split('T')[0];const urls=[...staticPaths.map(p=>`  <url><loc>${SITE}${p.path}</loc><lastmod>${today}</lastmod><priority>${p.priority}</priority></url>`),...projects.map(p=>`  <url><loc>${SITE}/projects/${p.id}/</loc><lastmod>${today}</lastmod><priority>0.7</priority></url>`)].join('\n');const xml=`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`;return new Response(xml,{headers:{'Content-Type':'application/xml; charset=utf-8'}})}
