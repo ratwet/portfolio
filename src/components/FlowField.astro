@@ -1,15 +1,3 @@
-<!--
-  Quiet vector flow field - the site's single dynamic-background element.
-  Short ticks drift along a slow mathematical field, drawn in --color-ink at
-  low opacity with occasional --color-signal highlights.
-
-  Discipline:
-  - prefers-reduced-motion renders ONE static frame, never an empty section
-  - boots on idle after first paint, so it never blocks LCP
-  - IntersectionObserver pauses the loop when scrolled out of view
-  - particle count and devicePixelRatio are both capped
-  - torn down on astro:before-swap so navigations don't leak RAF loops
--->
 <canvas class="hero-field" data-flow-field aria-hidden="true"></canvas>
 
 <script>
@@ -26,23 +14,41 @@
     reduced: boolean;
     io?: IntersectionObserver;
     onResize: () => void;
+    onVisibility: () => void;
+    onMotionChange: (event: MediaQueryListEvent) => void;
+    motionQuery: MediaQueryList;
 
     constructor(canvas: HTMLCanvasElement) {
       this.canvas = canvas;
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('2d context unavailable');
       this.ctx = ctx;
-      this.reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      this.motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      this.reduced = this.motionQuery.matches;
 
       this.resize();
       this.seed();
-
       this.onResize = () => {
         this.resize();
         this.seed();
         if (this.reduced) this.staticFrame();
       };
+      this.onVisibility = () => {
+        if (document.hidden) this.stop();
+        else if (!this.reduced && this.io) this.start();
+      };
+      this.onMotionChange = (event) => {
+        this.reduced = event.matches;
+        if (this.reduced) {
+          this.stop();
+          this.staticFrame();
+        } else if (!document.hidden && this.io) {
+          this.start();
+        }
+      };
       window.addEventListener('resize', this.onResize);
+      document.addEventListener('visibilitychange', this.onVisibility);
+      this.motionQuery.addEventListener('change', this.onMotionChange);
 
       if (this.reduced) {
         this.staticFrame();
@@ -50,7 +56,7 @@
       }
 
       this.io = new IntersectionObserver(
-        (entries) => (entries[0]?.isIntersecting ? this.start() : this.stop()),
+        (entries) => (entries[0]?.isIntersecting && !document.hidden ? this.start() : this.stop()),
         { threshold: 0 }
       );
       this.io.observe(canvas);
@@ -128,14 +134,20 @@
     }
 
     start() {
-      if (this.running || this.reduced) return;
+      if (this.running || this.reduced || document.hidden) return;
       this.running = true;
-      const loop = (t: number) => { if (!this.running) return; this.step(t); this.raf = requestAnimationFrame(loop); };
+      const loop = (t: number) => { if (!this.running || this.reduced || document.hidden) return; this.step(t); this.raf = requestAnimationFrame(loop); };
       this.raf = requestAnimationFrame(loop);
     }
 
     stop() { this.running = false; if (this.raf) cancelAnimationFrame(this.raf); this.raf = 0; }
-    destroy() { this.stop(); this.io?.disconnect(); window.removeEventListener('resize', this.onResize); }
+    destroy() {
+      this.stop();
+      this.io?.disconnect();
+      window.removeEventListener('resize', this.onResize);
+      document.removeEventListener('visibilitychange', this.onVisibility);
+      this.motionQuery.removeEventListener('change', this.onMotionChange);
+    }
   }
 
   let instance: FlowField | null = null;
