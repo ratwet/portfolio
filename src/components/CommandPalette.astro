@@ -8,8 +8,8 @@ const pages = [
 ];
 ---
 <div class="palette-backdrop" data-open="false" id="palette-backdrop">
-  <div class="palette" role="dialog" aria-modal="true" aria-label="Jump to">
-    <div class="palette-header"><span>Jump to</span><input class="palette-input" id="palette-input" type="text" placeholder="Type a page name..." autocomplete="off" /><span>ESC</span></div>
+  <div class="palette" role="dialog" aria-modal="true" aria-labelledby="palette-title">
+    <div class="palette-header"><span id="palette-title">Jump to</span><input class="palette-input" id="palette-input" type="text" placeholder="Type a page name..." autocomplete="off" aria-controls="palette-list" /><span>ESC</span></div>
     <ul class="palette-list" id="palette-list">
       {pages.map((p) => <li><a class="palette-item" href={p.href} data-label={p.label.toLowerCase()} data-num={p.num}><span><span class="palette-item-num">{p.num}</span>{p.label}</span><span aria-hidden="true">↗</span></a></li>)}
     </ul>
@@ -18,15 +18,86 @@ const pages = [
 <script>
   const backdrop = () => document.getElementById('palette-backdrop');
   const input = () => document.getElementById('palette-input') as HTMLInputElement | null;
-  const open = () => { backdrop()?.setAttribute('data-open','true'); const i=input(); if(i){i.value=''; i.focus();} };
-  const close = () => { backdrop()?.setAttribute('data-open','false'); };
-  const filter = (q:string) => document.querySelectorAll<HTMLElement>('#palette-list .palette-item').forEach(a => { const li=a.closest('li'); if(li) li.style.display=(a.dataset.label??'').includes(q.trim().toLowerCase())?'':'none'; });
-  function bind(){
-    const b=backdrop(), i=input(), t=document.getElementById('palette-trigger');
-    if(t&&t.dataset.bound!=='true'){t.dataset.bound='true';t.addEventListener('click',open)}
-    if(b&&b.dataset.bound!=='true'){b.dataset.bound='true';b.addEventListener('click',e=>{if(e.target===b)close()})}
-    if(i&&i.dataset.bound!=='true'){i.dataset.bound='true';i.addEventListener('input',()=>filter(i.value));i.addEventListener('keydown',e=>{if(e.key==='Enter'){const a=[...document.querySelectorAll<HTMLAnchorElement>('#palette-list .palette-item')].find(x=>(x.closest('li') as HTMLElement)?.style.display!=='none');if(a){e.preventDefault();close();a.click()}}})}
+  const items = () => [...document.querySelectorAll<HTMLAnchorElement>('#palette-list .palette-item')].filter((a) => (a.closest('li') as HTMLElement | null)?.style.display !== 'none');
+  let previousFocus: HTMLElement | null = null;
+  let activeIndex = 0;
+
+  const close = () => {
+    backdrop()?.setAttribute('data-open', 'false');
+    previousFocus?.focus();
+    previousFocus = null;
+  };
+  const setActive = (index: number) => {
+    const visible = items();
+    if (!visible.length) return;
+    activeIndex = (index + visible.length) % visible.length;
+    visible.forEach((item, i) => item.setAttribute('aria-current', i === activeIndex ? 'true' : 'false'));
+    visible[activeIndex]?.focus();
+  };
+  const open = () => {
+    const b = backdrop();
+    if (!b) return;
+    previousFocus = document.activeElement as HTMLElement | null;
+    b.setAttribute('data-open', 'true');
+    const i = input();
+    if (i) { i.value = ''; i.focus(); }
+    activeIndex = 0;
+  };
+  const filter = (q: string) => {
+    document.querySelectorAll<HTMLElement>('#palette-list li').forEach((li) => {
+      const a = li.querySelector<HTMLAnchorElement>('.palette-item');
+      li.style.display = (a?.dataset.label ?? '').includes(q.trim().toLowerCase()) ? '' : 'none';
+    });
+    activeIndex = 0;
+  };
+
+  function bind() {
+    const b = backdrop(), i = input(), t = document.getElementById('palette-trigger');
+    if (t && t.dataset.bound !== 'true') { t.dataset.bound = 'true'; t.addEventListener('click', open); }
+    if (b && b.dataset.bound !== 'true') {
+      b.dataset.bound = 'true';
+      b.addEventListener('click', (e) => { if (e.target === b) close(); });
+      b.querySelector('.palette')?.addEventListener('keydown', (event) => {
+        const e = event as KeyboardEvent;
+        if (e.key === 'Escape') { e.preventDefault(); close(); return; }
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          const visible = items();
+          const focused = document.activeElement as HTMLAnchorElement | null;
+          const current = visible.indexOf(focused);
+          setActive(e.key === 'ArrowDown' ? current + 1 : current - 1);
+          return;
+        }
+        if (e.key === 'Tab') {
+          const focusable = [i, ...items()].filter(Boolean) as HTMLElement[];
+          if (!focusable.length) return;
+          const first = focusable[0], last = focusable[focusable.length - 1];
+          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+      });
+    }
+    if (i && i.dataset.bound !== 'true') {
+      i.dataset.bound = 'true';
+      i.addEventListener('input', () => filter(i.value));
+      i.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { const a = items()[activeIndex]; if (a) { e.preventDefault(); close(); a.click(); } }
+        if (e.key === 'ArrowDown') { e.preventDefault(); setActive(0); }
+        if (e.key === 'ArrowUp') { e.preventDefault(); setActive(items().length - 1); }
+      });
+    }
   }
-  if(!(window as any).__paletteKeysBound){(window as any).__paletteKeysBound=true;document.addEventListener('keydown',e=>{const target=e.target as HTMLElement|null;const typing=target?.tagName==='INPUT'||target?.tagName==='TEXTAREA'||target?.isContentEditable;if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();backdrop()?.getAttribute('data-open')==='true'?close():open()}else if(e.key==='Escape'&&backdrop()?.getAttribute('data-open')==='true')close();else if(e.key==='/'&&!typing&&backdrop()?.getAttribute('data-open')!=='true'){e.preventDefault();open()}})}
-  bind(); document.addEventListener('astro:page-load',bind);
+
+  if (!(window as any).__paletteKeysBound) {
+    (window as any).__paletteKeysBound = true;
+    document.addEventListener('keydown', (e) => {
+      const target = e.target as HTMLElement | null;
+      const typing = target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable;
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); backdrop()?.getAttribute('data-open') === 'true' ? close() : open(); }
+      else if (e.key === 'Escape' && backdrop()?.getAttribute('data-open') === 'true') close();
+      else if (e.key === '/' && !typing && backdrop()?.getAttribute('data-open') !== 'true') { e.preventDefault(); open(); }
+    });
+  }
+  bind();
+  document.addEventListener('astro:page-load', bind);
 </script>
