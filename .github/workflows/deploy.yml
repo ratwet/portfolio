@@ -30,6 +30,8 @@ jobs:
         run: npm run check
       - name: Build site
         run: npm run build
+      - name: Check built links and assets
+        run: node scripts/check-dist.mjs
       - name: Upload artifact
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
