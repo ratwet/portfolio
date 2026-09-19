@@ -3,9 +3,9 @@ const path = Astro.url.pathname;
 const isActive = (href: string) => (path === href ? 'page' : undefined);
 ---
 <header class="nav">
-  <div class="wrap nav-inner">
+  <div class="wrap nav-inner" id="site-nav">
     <a class="brand" href="/"><img src="/reticle-mark.svg" alt="" width="20" height="20" />kaushal kumar</a>
-    <nav class="nav-links" aria-label="Primary">
+    <nav class="nav-links" id="primary-nav" aria-label="Primary">
       <a href="/about/" aria-current={isActive('/about/')}>About</a>
       <a href="/projects/" aria-current={isActive('/projects/')}>Work</a>
       <a href="/experience/" aria-current={isActive('/experience/')}>Experience</a>
@@ -13,22 +13,42 @@ const isActive = (href: string) => (path === href ? 'page' : undefined);
       <a href="/contact/" aria-current={isActive('/contact/')}>Contact</a>
     </nav>
     <div class="nav-actions">
+      <button class="icon-btn mobile-menu-toggle" id="mobile-menu-toggle" type="button" aria-controls="primary-nav" aria-expanded="false">
+        <span aria-hidden="true">☰</span><span class="mobile-menu-label">Menu</span>
+      </button>
       <button class="icon-btn" id="theme-toggle" type="button" aria-label="Toggle color theme"><span aria-hidden="true">◐</span> Theme</button>
-      <button class="icon-btn" id="palette-trigger" type="button" aria-haspopup="dialog">⌘K</button>
+      <button class="icon-btn palette-trigger" id="palette-trigger" type="button" aria-haspopup="dialog"><span class="palette-shortcut">⌘K</span><span class="palette-label">Search</span></button>
     </div>
   </div>
 </header>
 <script>
-  function bindThemeToggle() {
+  function bindNavControls() {
     const toggle = document.getElementById('theme-toggle');
-    if (!toggle || toggle.dataset.bound === 'true') return;
-    toggle.dataset.bound = 'true';
-    toggle.addEventListener('click', () => {
-      const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      try { localStorage.setItem('theme', next); } catch (e) {}
-    });
+    if (toggle && toggle.dataset.bound !== 'true') {
+      toggle.dataset.bound = 'true';
+      toggle.addEventListener('click', () => {
+        const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        try { localStorage.setItem('theme', next); } catch (e) {}
+      });
+    }
+
+    const menu = document.getElementById('mobile-menu-toggle');
+    const nav = document.getElementById('site-nav');
+    if (menu && nav && menu.dataset.bound !== 'true') {
+      menu.dataset.bound = 'true';
+      menu.addEventListener('click', () => {
+        const open = nav.classList.toggle('nav-open');
+        menu.setAttribute('aria-expanded', String(open));
+      });
+      nav.querySelectorAll<HTMLAnchorElement>('.nav-links a').forEach((link) => {
+        link.addEventListener('click', () => {
+          nav.classList.remove('nav-open');
+          menu.setAttribute('aria-expanded', 'false');
+        });
+      });
+    }
   }
-  bindThemeToggle();
-  document.addEventListener('astro:page-load', bindThemeToggle);
+  bindNavControls();
+  document.addEventListener('astro:page-load', bindNavControls);
 </script>
