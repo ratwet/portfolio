@@ -2,10 +2,10 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 
 const items = [
-  { path: '/assets/robotraverse.jpg', category: 'Robotics', title: 'RoboTraverse', note: 'Rope-traversing robot built for the CSE Robotics Club time trial.' },
-  { path: '/assets/robot.png', category: 'Robotics', title: 'Robo Soccer Robot', note: 'Four-wheel differential-drive robot with browser-based wireless control.' },
-  { path: '/assets/wokwi_simulation.png', category: 'Edge & IoT', title: 'ESP32 IoT Device Simulator', note: 'Wokwi simulation of sensor telemetry and MQTT publishing.' },
-  { path: '/assets/assetsimage.png', category: 'Computer Vision', title: 'Finger Gesture Cursor Control', note: 'Real-time hand tracking and gesture-based cursor control.' }
+  { path: '/media/robotraverse.jpg', category: 'Robotics', title: 'RoboTraverse', note: 'Rope-traversing robot built for the CSE Robotics Club time trial.' },
+  { path: '/media/robot.png', category: 'Robotics', title: 'Robo Soccer Robot', note: 'Four-wheel differential-drive robot with browser-based wireless control.' },
+  { path: '/media/wokwi_simulation.png', category: 'Edge & IoT', title: 'ESP32 IoT Device Simulator', note: 'Wokwi simulation of sensor telemetry and MQTT publishing.' },
+  { path: '/media/assetsimage.png', category: 'Computer Vision', title: 'Finger Gesture Cursor Control', note: 'Real-time hand tracking and gesture-based cursor control.' }
 ];
 ---
 
@@ -21,7 +21,7 @@ const items = [
       {items.map((item) => (
         <figure class="media-card">
           <div class="media-card-image">
-            <img src={item.path} alt={item.title} loading="lazy" />
+            <img src={item.path} alt={`${item.title}: ${item.note}`} loading="lazy" />
           </div>
           <figcaption class="media-card-body">
             <div class="media-card-kind">{item.category}</div>
