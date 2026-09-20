@@ -3,7 +3,7 @@ import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
-  site: 'https://ratwet.github.io',
+  site: 'https://kaushal.is-a.dev',
   trailingSlash: 'always',
   build: {
     format: 'directory',
