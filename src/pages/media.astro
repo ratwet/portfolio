@@ -19,7 +19,7 @@ const items = [
   <section class="wrap">
     <div class="media-grid">
       {items.map((item) => (
-        <figure class="media-card">
+        <figure class="media-card" data-cat={item.category === 'Computer Vision' ? 'cv' : item.category === 'Edge & IoT' ? 'iot' : 'robo'}>
           <div class="media-card-image">
             <img src={item.path} alt={`${item.title}: ${item.note}`} loading="lazy" />
           </div>
