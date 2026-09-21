@@ -80,7 +80,7 @@
 }
 .tag:hover{
   background:var(--color-signal-dim);
-  border-color:var(--color-sage);
+  border-color:var(--color-accent-sage);
 }
 .entry li::before{background:var(--color-signal)}
 .entry:nth-child(3n+2) li::before{background:var(--color-accent-clay)}
