@@ -65,11 +65,11 @@
     colors() {
       const s = getComputedStyle(document.documentElement);
       return {
-        ink: s.getPropertyValue('--color-ink').trim() || '#1c2823',
-        signal: s.getPropertyValue('--color-signal').trim() || '#3f7766',
-        clay: s.getPropertyValue('--color-accent-clay').trim() || '#c9784c',
-        sky: s.getPropertyValue('--color-accent-sky').trim() || '#5b82a5',
-        sun: s.getPropertyValue('--color-accent-sun').trim() || '#c39a4b',
+        ink: s.getPropertyValue('--color-ink').trim() || '#191b20',
+        signal: s.getPropertyValue('--trace').trim() || '#4fb3aa',
+        clay: s.getPropertyValue('--pulse').trim() || '#e2654a',
+        sky: s.getPropertyValue('--volt').trim() || '#6f8cff',
+        sun: s.getPropertyValue('--signal').trim() || '#d9a441',
       };
     }
 
@@ -89,7 +89,7 @@
 
     spawn(): Particle {
       const roll = Math.random();
-      const tone = roll < 0.055 ? 'signal' : roll < 0.085 ? 'clay' : roll < 0.11 ? 'sky' : roll < 0.125 ? 'sun' : 'ink';
+      const tone = roll < 0.035 ? 'signal' : roll < 0.06 ? 'clay' : roll < 0.085 ? 'sky' : roll < 0.105 ? 'sun' : 'ink';
       return {
         x: Math.random() * this.w,
         y: Math.random() * this.h,
@@ -123,7 +123,27 @@
         p.x = nx; p.y = ny; p.life -= 1;
         if (p.x < 0 || p.x > this.w || p.y < 0 || p.y > this.h || p.life <= 0) Object.assign(p, this.spawn());
       }
+      this.drawCenterPulse(ctx, signal, t);
       ctx.globalAlpha = 1;
+    }
+
+    drawCenterPulse(ctx: CanvasRenderingContext2D, signal: string, t: number) {
+      const phase = (Math.sin(t * 0.0021) + 1) / 2;
+      const radius = 3.5 + phase * 2.2;
+      const alpha = 0.42 + phase * 0.22;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = signal;
+      ctx.beginPath();
+      ctx.arc(this.w * 0.72, this.h * 0.5, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = alpha * 0.32;
+      ctx.strokeStyle = signal;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(this.w * 0.72, this.h * 0.5, radius + 5 + phase * 3, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
     }
 
     staticFrame() {
@@ -142,7 +162,26 @@
         }
         ctx.stroke();
       }
+      this.drawCenterPulseStatic(ctx, signal);
       ctx.globalAlpha = 1;
+    }
+
+    drawCenterPulseStatic(ctx: CanvasRenderingContext2D, signal: string) {
+      const x = this.w * 0.72;
+      const y = this.h * 0.5;
+      ctx.save();
+      ctx.fillStyle = signal;
+      ctx.globalAlpha = 0.48;
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 0.15;
+      ctx.strokeStyle = signal;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(x, y, 9, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
     }
 
     start() {
