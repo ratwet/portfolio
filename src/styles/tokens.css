@@ -14,9 +14,21 @@
   --volt:#6f8cff;
   --spark:#7fc86b;
 
+  /* Text-safe siblings: same hue family, darkened to clear WCAG AA
+     (4.5:1) against the light theme's page/surface background.
+     Use these for TEXT, LINKS, and FOCUS OUTLINES sitting directly
+     on the page background. Keep the plain tokens above for fills
+     (button backgrounds, borders, canvas/particle colors) — those
+     already work fine in both themes as-is. */
+  --signal-text:#8e661c;
+  --trace-text:#32746e;
+  --pulse-text:#c53d20;
+  --volt-text:#2d57ff;
+  --spark-text:#3d782c;
+
   /* Compatibility aliases for the Astro stylesheet */
   --color-signal:var(--signal);
-  --color-trace:var(--trace);
+  --color-trace:var(--trace-text);
   --color-pulse:var(--pulse);
   --color-volt:var(--volt);
   --color-spark:var(--spark);
@@ -60,6 +72,12 @@
   --color-border:#2a2d34;
   --color-ink:#ecedef;
   --color-ink-dim:#9a9da6;
+  /* In dark mode the originals already pass contrast — just alias back to them */
+  --signal-text:var(--signal);
+  --trace-text:var(--trace);
+  --pulse-text:var(--pulse);
+  --volt-text:var(--volt);
+  --spark-text:var(--spark);
   --color-signal-dim:#3d321d;
   --color-success:#5cc999;
   --color-danger:#ef8a72;
