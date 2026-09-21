@@ -65,8 +65,11 @@
     colors() {
       const s = getComputedStyle(document.documentElement);
       return {
-        ink: s.getPropertyValue('--color-ink').trim() || '#191b20',
-        signal: s.getPropertyValue('--color-signal').trim() || '#2d4fb0',
+        ink: s.getPropertyValue('--color-ink').trim() || '#1c2823',
+        signal: s.getPropertyValue('--color-signal').trim() || '#3f7766',
+        clay: s.getPropertyValue('--color-accent-clay').trim() || '#c9784c',
+        sky: s.getPropertyValue('--color-accent-sky').trim() || '#5b82a5',
+        sun: s.getPropertyValue('--color-accent-sun').trim() || '#c39a4b',
       };
     }
 
@@ -85,7 +88,14 @@
     }
 
     spawn(): Particle {
-      const roll = Math.random();\n      const tone = roll < 0.055 ? 'signal' : roll < 0.085 ? 'clay' : roll < 0.11 ? 'sky' : roll < 0.125 ? 'sun' : 'ink';\n      return { x: Math.random() * this.w, y: Math.random() * this.h, life: 80 + Math.random() * 160, tone };
+      const roll = Math.random();
+      const tone = roll < 0.055 ? 'signal' : roll < 0.085 ? 'clay' : roll < 0.11 ? 'sky' : roll < 0.125 ? 'sun' : 'ink';
+      return {
+        x: Math.random() * this.w,
+        y: Math.random() * this.h,
+        life: 80 + Math.random() * 160,
+        tone,
+      };
     }
 
     seed() {
@@ -98,15 +108,16 @@
     }
 
     step(t: number) {
-      const { ink, signal } = this.colors();
+      const { ink, signal, clay, sky, sun } = this.colors();
+      const palette = { ink, signal, clay, sky, sun };
       const ctx = this.ctx;
       ctx.clearRect(0, 0, this.w, this.h);
       for (const p of this.particles) {
         const a = this.angleAt(p.x, p.y, t);
         const nx = p.x + Math.cos(a) * 0.4;
         const ny = p.y + Math.sin(a) * 0.4;
-        ctx.strokeStyle = p.signal ? signal : ink;
-        ctx.globalAlpha = p.signal ? 0.32 : 0.12;
+        ctx.strokeStyle = palette[p.tone];
+        ctx.globalAlpha = p.tone === 'ink' ? 0.12 : 0.23;
         ctx.lineWidth = 1.1;
         ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(nx, ny); ctx.stroke();
         p.x = nx; p.y = ny; p.life -= 1;
@@ -116,13 +127,14 @@
     }
 
     staticFrame() {
-      const { ink, signal } = this.colors();
+      const { ink, signal, clay, sky, sun } = this.colors();
+      const palette = { ink, signal, clay, sky, sun };
       const ctx = this.ctx;
       ctx.clearRect(0, 0, this.w, this.h);
       for (const p of this.particles) {
         let { x, y } = p;
-        ctx.strokeStyle = p.signal ? signal : ink;
-        ctx.globalAlpha = p.signal ? 0.3 : 0.11;
+        ctx.strokeStyle = palette[p.tone];
+        ctx.globalAlpha = p.tone === 'ink' ? 0.11 : 0.21;
         ctx.lineWidth = 1.1;
         ctx.beginPath(); ctx.moveTo(x, y);
         for (let i = 0; i < 26; i++) {
