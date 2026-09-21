@@ -51,15 +51,61 @@ const schemas = Array.isArray(structuredData) ? structuredData : structuredData 
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageURL} />
     <link rel="icon" type="image/svg+xml" href="/reticle-mark.svg" />
-    <link rel="mask-icon" href="/reticle-mark.svg" color="#1c2823" />
+    <link rel="mask-icon" href="/reticle-mark.svg" color="#191b20" />
     <link rel="manifest" href="/site.webmanifest" />
-    <meta name="theme-color" content="#f7f5ee" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#111914" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f1f2f4" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#15171b" media="(prefers-color-scheme: dark)" />
     {schemas.map((schema) => <script type="application/ld+json" set:html={JSON.stringify(schema)} />)}
     <script is:inline>
       (function(){try{const stored=localStorage.getItem('theme');const theme=stored||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',theme)}catch(e){}})();
     </script>
     <ClientRouter />
+
+    <script is:inline>
+      (function(){
+        function initStats(){
+          const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          const statEls = document.querySelectorAll('.highlight-number[data-value]');
+          if (!statEls.length) return;
+          statEls.forEach(function(el){
+            if (el.dataset.countupBound === 'true') return;
+            el.dataset.countupBound = 'true';
+            const animateCount = function(){
+              const target = parseFloat(el.dataset.value);
+              const suffix = el.dataset.suffix || '';
+              const isInt = el.dataset.format === 'int';
+              if (reduceMotion || Number.isNaN(target)) {
+                el.textContent = (isInt ? Math.round(target) : target) + suffix;
+                return;
+              }
+              const duration = 1200;
+              let start = null;
+              function tick(ts){
+                if (start === null) start = ts;
+                const progress = Math.min((ts - start) / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                const value = target * eased;
+                el.textContent = (isInt ? Math.round(value) : value.toFixed(2)) + suffix;
+                if (progress < 1) requestAnimationFrame(tick);
+              }
+              requestAnimationFrame(tick);
+            };
+            const observer = new IntersectionObserver(function(entries){
+              entries.forEach(function(entry){
+                if (entry.isIntersecting){
+                  animateCount();
+                  observer.unobserve(entry.target);
+                }
+              });
+            }, { threshold: 0.5 });
+            observer.observe(el);
+          });
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initStats, { once:true });
+        else initStats();
+        document.addEventListener('astro:page-load', initStats);
+      })();
+    </script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
