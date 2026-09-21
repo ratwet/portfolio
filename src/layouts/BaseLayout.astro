@@ -51,10 +51,10 @@ const schemas = Array.isArray(structuredData) ? structuredData : structuredData 
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageURL} />
     <link rel="icon" type="image/svg+xml" href="/reticle-mark.svg" />
-    <link rel="mask-icon" href="/reticle-mark.svg" color="#191b20" />
+    <link rel="mask-icon" href="/reticle-mark.svg" color="#1c2823" />
     <link rel="manifest" href="/site.webmanifest" />
-    <meta name="theme-color" content="#f1f2f4" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#15171b" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f7f5ee" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#111914" media="(prefers-color-scheme: dark)" />
     {schemas.map((schema) => <script type="application/ld+json" set:html={JSON.stringify(schema)} />)}
     <script is:inline>
       (function(){try{const stored=localStorage.getItem('theme');const theme=stored||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',theme)}catch(e){}})();
