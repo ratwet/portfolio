@@ -1,7 +1,7 @@
 <canvas class="hero-field" data-flow-field aria-hidden="true"></canvas>
 
 <script>
-  type Particle = { x: number; y: number; life: number; signal: boolean };
+  type Particle = { x: number; y: number; life: number; tone: 'ink' | 'signal' | 'clay' | 'sky' | 'sun' };
 
   class FlowField {
     canvas: HTMLCanvasElement;
@@ -85,7 +85,7 @@
     }
 
     spawn(): Particle {
-      return { x: Math.random() * this.w, y: Math.random() * this.h, life: 80 + Math.random() * 160, signal: Math.random() < 0.07 };
+      const roll = Math.random();\n      const tone = roll < 0.055 ? 'signal' : roll < 0.085 ? 'clay' : roll < 0.11 ? 'sky' : roll < 0.125 ? 'sun' : 'ink';\n      return { x: Math.random() * this.w, y: Math.random() * this.h, life: 80 + Math.random() * 160, tone };
     }
 
     seed() {
