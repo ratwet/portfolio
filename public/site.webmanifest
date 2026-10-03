@@ -1,0 +1,17 @@
+{
+  "name": "Kaushal Kumar — Portfolio",
+  "short_name": "Kaushal Kumar",
+  "description": "Applied AI, computer vision, embedded systems, and robotics.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f1f2f4",
+  "theme_color": "#f1f2f4",
+  "icons": [
+    {
+      "src": "/reticle-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

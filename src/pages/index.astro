@@ -1,0 +1,290 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import FlowField from '../components/FlowField.astro';
+
+const allProjects = await getCollection('projects');
+const featured = allProjects
+  .filter((p) => p.data.featured)
+  .sort((a, b) => a.data.sortOrder - b.data.sortOrder)
+  .slice(0, 4);
+
+const allExperience = await getCollection('experience');
+const experience = allExperience
+  .sort((a, b) => a.data.sortOrder - b.data.sortOrder)
+  .slice(0, 2);
+
+const techStack = [
+  'Python',
+  'C / C++',
+  'OpenCV',
+  'MediaPipe',
+  'ESP32 / FreeRTOS',
+  'PyTorch',
+  'Linux Kernel (uinput)',
+  'MQTT / IoT',
+  'NumPy',
+  'Computer Vision',
+  'Differential Drive',
+  'Astro / TypeScript',
+];
+---
+
+<BaseLayout
+  title="Home"
+  fullTitle="Kaushal Kumar - Applied AI, Computer Vision & Robotics"
+  description="Portfolio of Kaushal Kumar, a Mathematics & Computing student building applied AI, computer vision, edge systems, and robotics."
+>
+  <!-- Hero Section -->
+  <section class="hero">
+    <FlowField />
+    <div class="wrap hero-content">
+      <div class="hero-grid">
+        <div class="hero-text">
+          <p class="hero-eyebrow">Mathematics &amp; Computing · Applied AI, CV &amp; Robotics</p>
+          <h1 class="hero-headline">
+            I build technical systems that hold up <span class="gradient-text">when you look closely.</span>
+          </h1>
+          <p class="hero-sub">
+            B.Tech Mathematics &amp; Computing student at Central University of Jammu. Focused on real-time computer vision, edge machine learning, and competitive robotics — measured, benchmarked, and built to be inspected.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="/projects/">
+              <span>Explore Selected Work</span>
+              <span aria-hidden="true">→</span>
+            </a>
+            <a class="btn btn-secondary" href="/contact/">Get in touch</a>
+          </div>
+          <div class="proof-chips">
+            <span class="proof-chip"><strong>1st Place</strong> RoboTraverse '26</span>
+            <span class="proof-chip"><strong>~40 FPS</strong> Real-Time Hand CV</span>
+            <span class="proof-chip"><strong>240 MHz</strong> ESP32 Mesh Robotics</span>
+          </div>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="hero-orb">
+            <img src="/reticle-mark.svg" alt="" width="120" height="120" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tech Stack Marquee Strip -->
+  <div class="tech-strip" aria-label="Core technologies and toolchain">
+    <div class="marquee">
+      <div class="marquee-track">
+        {[...techStack, ...techStack].map((tech) => (
+          <span class="tech-chip">{tech}</span>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <!-- Focus / Education / Status Meta Row -->
+  <section class="wrap">
+    <div class="meta-row">
+      <div class="meta-col">
+        <span class="label">Focus</span>
+        <p>Real-Time Computer Vision · Edge AI · Low-Latency Robotics · Embedded Firmware</p>
+      </div>
+      <div class="meta-col">
+        <span class="label">Education</span>
+        <p>B.Tech in Mathematics &amp; Computing · Central University of Jammu (2025–2029)</p>
+      </div>
+      <div class="meta-col">
+        <span class="label">Current Status</span>
+        <p>Mentoring student robotics teams at CUJ, e-Yantra competition build work, &amp; edge CV research</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Selected Work Grid -->
+  <section class="wrap">
+    <div class="section-head-row">
+      <div>
+        <span class="label">Featured Builds</span>
+        <h2 class="section-heading section-heading-tight">Selected Work</h2>
+      </div>
+      <a class="btn btn-secondary" href="/projects/">Full Project Archive →</a>
+    </div>
+
+    <div class="work-grid">
+      {featured.map((project) => (
+        <a class="work-card" href={`/projects/${project.id}/`} data-spotlight>
+          {project.data.coverImage && (
+            <div class="work-card-image">
+              <img src={project.data.coverImage} alt={project.data.title} loading="lazy" />
+            </div>
+          )}
+          <div class="work-card-body">
+            <span class="label">{project.data.category}</span>
+            <h3>{project.data.title}</h3>
+            <p>{project.data.summary}</p>
+            {project.data.metrics && project.data.metrics.length > 0 && (
+              <div class="work-card-metrics">
+                {project.data.metrics.map((m) => (
+                  <span class="metric-chip">
+                    {m.label}: <strong>{m.value}</strong>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <!-- Numeric Stats Strip -->
+  <div class="stats-strip">
+    <div class="wrap">
+      <div class="stats-row">
+        <div>
+          <span class="stat-value" data-count="1" data-prefix="" data-suffix="st">1st</span>
+          <span class="stat-label">RoboTraverse Club Champions</span>
+        </div>
+        <div>
+          <span class="stat-value" data-count="40" data-prefix="~" data-suffix=" FPS">~40 FPS</span>
+          <span class="stat-label">CPU-only hand tracking throughput</span>
+        </div>
+        <div>
+          <span class="stat-value" data-count="25" data-prefix="<" data-suffix=" ms">&lt;25 ms</span>
+          <span class="stat-label">End-to-end Wayland input latency</span>
+        </div>
+        <div>
+          <span class="stat-value" data-count="4" data-prefix="" data-suffix="+">4+</span>
+          <span class="stat-label">Full-stack robotics &amp; AI prototypes</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- How I Work Timeline -->
+  <section class="wrap">
+    <span class="label">Engineering Philosophy</span>
+    <h2 class="section-heading">How I work</h2>
+    <div class="timeline">
+      <div class="timeline-step">
+        <div class="timeline-dot" aria-hidden="true"></div>
+        <span class="label">01 // Frame</span>
+        <h3>Define constraints before writing code</h3>
+        <p>Quantify latency bounds, CPU utilization ceilings, memory footprints, and explicit success criteria before choosing a stack or architecting a pipeline.</p>
+      </div>
+      <div class="timeline-step">
+        <div class="timeline-dot" aria-hidden="true"></div>
+        <span class="label">02 // Build</span>
+        <h3>Make it measurable from day one</h3>
+        <p>Construct the smallest functional end-to-end slice that can be profiled. Hardware in the loop, telemetry streamed early, assumptions verified on real silicon.</p>
+      </div>
+      <div class="timeline-step">
+        <div class="timeline-dot" aria-hidden="true"></div>
+        <span class="label">03 // Profile &amp; Refine</span>
+        <h3>Isolate and eliminate real bottlenecks</h3>
+        <p>Profile frame jitter, kernel context switches, and power draw. Document the actual engineering tradeoffs made between latency, responsiveness, and thermal stability.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Experience Snapshot -->
+  <section class="wrap">
+    <div class="section-head-row">
+      <div>
+        <span class="label">Background</span>
+        <h2 class="section-heading section-heading-tight">Experience &amp; Mentorship</h2>
+      </div>
+      <a class="btn btn-secondary" href="/experience/">All Experience →</a>
+    </div>
+    <div class="entries">
+      {experience.map((item) => (
+        <article class="entry">
+          <div class="entry-meta">
+            <span>{item.data.start} {item.data.end ? `– ${item.data.end}` : '– Present'}</span>
+            {item.data.location && <span>{item.data.location}</span>}
+          </div>
+          <div class="entry-body">
+            <h3>{item.data.role}</h3>
+            <p class="entry-org">{item.data.org}</p>
+            <ul class="entry-highlights">
+              {item.data.highlights.map((h) => (
+                <li>{h}</li>
+              ))}
+            </ul>
+          </div>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <!-- CTA Band -->
+  <section class="wrap cta-band">
+    <div class="cta-inner">
+      <span class="label">Open for Opportunities</span>
+      <h2 class="section-heading cta-heading">
+        Have something worth building?
+      </h2>
+      <p class="prose-wrap cta-description">
+        Open to internships, research roles, and technical collaborations in computer vision, robotics, and embedded systems where shipping real code is part of the work.
+      </p>
+      <div class="center-actions">
+        <a class="btn btn-primary" href="/contact/">Start a conversation →</a>
+        <a class="btn btn-secondary" href="/about/">Read background</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  function initPageInteractions() {
+    // Card spotlight cursor tracking
+    const cards = document.querySelectorAll<HTMLElement>('[data-spotlight]');
+    cards.forEach((card) => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        card.style.setProperty('--mx', `${x}px`);
+        card.style.setProperty('--my', `${y}px`);
+      });
+    });
+
+    // Stats count-up animation
+    const statElements = document.querySelectorAll<HTMLElement>('.stat-value[data-count]');
+    if ('IntersectionObserver' in window && statElements.length > 0) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const target = entry.target as HTMLElement;
+          observer.unobserve(target);
+
+          const targetNum = parseInt(target.dataset.count || '0', 10);
+          const prefix = target.dataset.prefix || '';
+          const suffix = target.dataset.suffix || '';
+          if (isNaN(targetNum) || targetNum <= 0) return;
+
+          let start = 0;
+          const duration = 1200;
+          const startTime = performance.now();
+
+          const animate = (currentTime: number) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            // Ease out cubic
+            const ease = 1 - Math.pow(1 - progress, 3);
+            const currentVal = Math.round(start + (targetNum - start) * ease);
+            target.textContent = `${prefix}${currentVal}${suffix}`;
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            }
+          };
+          requestAnimationFrame(animate);
+        });
+      }, { threshold: 0.3 });
+
+      statElements.forEach((el) => observer.observe(el));
+    }
+  }
+
+  initPageInteractions();
+  document.addEventListener('astro:page-load', initPageInteractions);
+</script>

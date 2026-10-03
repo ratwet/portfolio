@@ -1,0 +1,172 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const items = [
+  {
+    path: '/media/robotraverse.png',
+    category: 'Robotics',
+    cat: 'robo',
+    title: 'RoboTraverse',
+    note: 'Custom rope-traversing racer built for the CSE Robotics Club time trial. 1st place champion.',
+  },
+  {
+    path: '/media/robot.png',
+    category: 'Robotics',
+    cat: 'robo',
+    title: 'Robo Soccer Robot',
+    note: 'Four-wheel differential-drive robot with browser-based wireless multi-touch control.',
+  },
+  {
+    path: '/media/wokwi_simulation.png',
+    category: 'Edge & IoT',
+    cat: 'iot',
+    title: 'ESP32 IoT Device Simulator',
+    note: 'Wokwi hardware simulation of sensor telemetry, OLED status, and HiveMQ MQTT publishing.',
+  },
+  {
+    path: '/media/assetsimage.png',
+    category: 'Computer Vision',
+    cat: 'cv',
+    title: 'Finger Gesture Cursor Control',
+    note: 'Real-time 21-point hand tracking with low-latency Wayland cursor injection via Linux uinput.',
+  },
+];
+---
+
+<BaseLayout
+  title="Media"
+  description="Project photographs, hardware prototypes, simulations, and technical visuals from Kaushal Kumar's engineering builds."
+>
+  <header class="page-header wrap">
+    <p class="hero-eyebrow">Visual Archive</p>
+    <h1 class="hero-headline">The work, in pictures.</h1>
+    <p class="hero-sub max-w-56ch">
+      Photographs, circuit simulations, hardware prototypes, and computer vision test benches from active and shipped builds. Click any image to view in high resolution.
+    </p>
+  </header>
+
+  <section class="wrap">
+    <div class="media-grid">
+      {items.map((item) => (
+        <figure
+          class="media-card"
+          data-cat={item.cat}
+          data-src={item.path}
+          data-title={item.title}
+          tabindex="0"
+          role="button"
+          aria-label={`View ${item.title} image full screen`}
+        >
+          <div class="media-card-image">
+            <img src={item.path} alt={`${item.title}: ${item.note}`} loading="lazy" />
+          </div>
+          <figcaption class="media-card-body">
+            <div class="media-card-kind">{item.category}</div>
+            <h3>{item.title}</h3>
+            <p>{item.note}</p>
+          </figcaption>
+        </figure>
+      ))}
+    </div>
+  </section>
+
+  <!-- Lightbox Modal -->
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true">
+    <button class="lightbox-close" id="lightbox-close" type="button" aria-label="Close image preview">✕</button>
+    <img id="lightbox-img" src="" alt="Full view" />
+  </div>
+</BaseLayout>
+
+<script>
+  let cleanupLightbox: (() => void) | null = null;
+
+  function initLightbox() {
+    cleanupLightbox?.();
+    cleanupLightbox = null;
+
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img') as HTMLImageElement | null;
+    const closeBtn = document.getElementById('lightbox-close');
+    const cards = [...document.querySelectorAll<HTMLElement>('.media-card')];
+    if (!lightbox || !lightboxImg || !closeBtn) return;
+
+    let previousFocus: HTMLElement | null = null;
+
+    const open = (src: string, alt: string) => {
+      previousFocus = document.activeElement as HTMLElement | null;
+      lightboxImg.src = src;
+      lightboxImg.alt = alt;
+      lightbox.classList.add('active');
+      lightbox.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('modal-open');
+      closeBtn.focus();
+    };
+
+    const close = () => {
+      lightbox.classList.remove('active');
+      lightbox.setAttribute('aria-hidden', 'true');
+      lightboxImg.src = '';
+      document.body.classList.remove('modal-open');
+      previousFocus?.focus();
+      previousFocus = null;
+    };
+
+    const onCardClick = (event: Event) => {
+      const card = event.currentTarget as HTMLElement;
+      const src = card.dataset.src;
+      const title = card.dataset.title || '';
+      if (src) open(src, title);
+    };
+    const onCardKeydown = (event: Event) => {
+      const e = event as KeyboardEvent;
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      const card = event.currentTarget as HTMLElement;
+      const src = card.dataset.src;
+      const title = card.dataset.title || '';
+      if (src) open(src, title);
+    };
+    cards.forEach((card) => {
+      card.addEventListener('click', onCardClick);
+      card.addEventListener('keydown', onCardKeydown);
+    });
+
+    const onClose = (event: Event) => {
+      event.stopPropagation();
+      close();
+    };
+    const onBackdropClick = (event: Event) => {
+      if (event.target === lightbox) close();
+    };
+    const onKeydown = (event: KeyboardEvent) => {
+      if (!lightbox.classList.contains('active')) return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        close();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      event.preventDefault();
+      closeBtn.focus();
+    };
+
+    closeBtn.addEventListener('click', onClose);
+    lightbox.addEventListener('click', onBackdropClick);
+    document.addEventListener('keydown', onKeydown);
+
+    cleanupLightbox = () => {
+      cards.forEach((card) => {
+        card.removeEventListener('click', onCardClick);
+        card.removeEventListener('keydown', onCardKeydown);
+      });
+      closeBtn.removeEventListener('click', onClose);
+      lightbox.removeEventListener('click', onBackdropClick);
+      document.removeEventListener('keydown', onKeydown);
+      document.body.classList.remove('modal-open');
+    };
+  }
+
+  initLightbox();
+  document.addEventListener('astro:page-load', initLightbox);
+  document.addEventListener('astro:before-swap', () => cleanupLightbox?.());
+</script>

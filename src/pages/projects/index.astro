@@ -1,0 +1,136 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const allProjects = (await getCollection('projects')).sort(
+  (a, b) => a.data.sortOrder - b.data.sortOrder
+);
+
+const categories = ['All', 'Computer Vision', 'Edge & IoT', 'Robotics'];
+---
+
+<BaseLayout
+  title="Work"
+  description="Selected engineering projects by Kaushal Kumar across computer vision, embedded systems, machine learning, and robotics."
+>
+  <header class="page-header wrap">
+    <p class="hero-eyebrow">Work Archive</p>
+    <h1 class="hero-headline">Builds that are easier to inspect than to hype.</h1>
+    <p class="hero-sub max-w-56ch">
+      The archive is organized around what each system does, why the architecture was chosen, and what another engineer can inspect in the repository.
+    </p>
+  </header>
+
+  <section class="wrap">
+    <!-- Filter Tabs -->
+    <div class="filter-tabs" id="filter-tabs" role="group" aria-label="Filter projects by category">
+      {categories.map((cat, i) => (
+        <button
+          class="filter-tab"
+          type="button"
+          data-filter={cat}
+          aria-pressed={i === 0 ? 'true' : 'false'}
+        >
+          {cat}
+        </button>
+      ))}
+    </div>
+
+    <!-- Projects Grid -->
+    <div class="work-grid" id="work-grid">
+      {allProjects.map((project) => (
+        <article
+          class="work-card"
+          data-category={project.data.category}
+          data-spotlight
+        >
+          {project.data.coverImage && (
+            <div class="work-card-image">
+              <img src={project.data.coverImage} alt={project.data.title} loading="lazy" />
+            </div>
+          )}
+          <div class="work-card-body">
+            <div class="card-meta-row">
+              <span class="label" data-cat={project.data.category === 'Computer Vision' ? 'cv' : project.data.category === 'Edge & IoT' ? 'iot' : project.data.category === 'Robotics' ? 'robo' : 'data'}>
+                {project.data.category}
+              </span>
+              <span class="label card-meta-status">
+                {project.data.year} · {project.data.status}
+              </span>
+            </div>
+            <h3>
+              <a class="card-title-link" href={`/projects/${project.id}/`}>
+                {project.data.title}
+              </a>
+            </h3>
+            <p>{project.data.summary}</p>
+
+            {project.data.metrics && project.data.metrics.length > 0 && (
+              <div class="work-card-metrics">
+                {project.data.metrics.map((m) => (
+                  <span class="metric-chip">
+                    {m.label}: <strong>{m.value}</strong>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <div class="card-actions">
+              <a class="btn btn-secondary" href={`/projects/${project.id}/`}>
+                Read Case Study →
+              </a>
+              {project.data.repoUrl && (
+                <a
+                  class="btn btn-secondary"
+                  href={project.data.repoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  GitHub ↗
+                </a>
+              )}
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  function initProjectFilters() {
+    const tabs = document.querySelectorAll<HTMLButtonElement>('#filter-tabs .filter-tab');
+    const cards = document.querySelectorAll<HTMLElement>('#work-grid .work-card');
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const filter = tab.dataset.filter;
+        tabs.forEach((t) => t.setAttribute('aria-pressed', 'false'));
+        tab.setAttribute('aria-pressed', 'true');
+
+        cards.forEach((card) => {
+          const cat = card.dataset.category;
+          if (filter === 'All' || cat === filter) {
+            card.hidden = false;
+          } else {
+            card.hidden = true;
+          }
+        });
+      });
+    });
+
+    // Spotlight cursor tracking on cards
+    cards.forEach((card) => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        card.style.setProperty('--mx', `${x}px`);
+        card.style.setProperty('--my', `${y}px`);
+      });
+    });
+  }
+
+  initProjectFilters();
+  document.addEventListener('astro:page-load', initProjectFilters);
+</script>

@@ -1,0 +1,25 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Page not found"
+  description="This page doesn't exist. Head back to the homepage or explore the engineering archive."
+>
+  <header class="page-header wrap page-404-header">
+    <p class="hero-eyebrow">404 · Error</p>
+    <h1 class="hero-headline">That page doesn't exist.</h1>
+    <p class="hero-sub max-w-50ch">
+      The URL might have moved, or been mistyped. Here are the most useful places to continue:
+    </p>
+    <div class="hero-actions mt-6">
+      <a class="btn btn-primary" href="/">
+        <span>Return to Home</span>
+        <span aria-hidden="true">→</span>
+      </a>
+      <a class="btn btn-secondary" href="/projects/">
+        Explore Work Archive
+      </a>
+    </div>
+  </header>
+</BaseLayout>

@@ -1,0 +1,55 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const rawExperience = (await getCollection('experience')).sort(
+  (a, b) => a.data.sortOrder - b.data.sortOrder
+);
+
+const experience = await Promise.all(
+  rawExperience.map(async (entry) => {
+    const { Content } = await render(entry);
+    return { entry, Content };
+  })
+);
+---
+
+<BaseLayout
+  title="Experience"
+  description="Technical mentorship, applied AI, and engineering work by Kaushal Kumar."
+>
+  <header class="page-header wrap">
+    <p class="hero-eyebrow">Experience &amp; Mentorship</p>
+    <h1 class="hero-headline">Work that has taught me how systems behave.</h1>
+    <p class="hero-sub max-w-56ch">
+      A concise record of technical mentorship, applied machine learning internships, and engineering problem-solving in production and competition environments.
+    </p>
+  </header>
+
+  <section class="wrap">
+    <div class="entries">
+      {experience.map(({ entry, Content }) => (
+        <article class="entry">
+          <div class="entry-meta">
+            <strong>{entry.data.start} {entry.data.end ? `– ${entry.data.end}` : '– Present'}</strong>
+            {entry.data.location && <div>{entry.data.location}</div>}
+          </div>
+          <div>
+            <h2 class="entry-title">{entry.data.role}</h2>
+            <p class="entry-org accent-org">
+              {entry.data.org}
+            </p>
+            <ul>
+              {entry.data.highlights.map((h) => (
+                <li>{h}</li>
+              ))}
+            </ul>
+            <div class="experience-prose">
+              <Content />
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  </section>
+</BaseLayout>

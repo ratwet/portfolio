@@ -1,0 +1,290 @@
+<canvas class="hero-field" data-flow-field aria-hidden="true"></canvas>
+
+<script>
+  type Particle = { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; signal: boolean };
+
+  class FlowField {
+    canvas: HTMLCanvasElement;
+    ctx: CanvasRenderingContext2D;
+    particles: Particle[] = [];
+    w = 0;
+    h = 0;
+    mouseX = -9999;
+    mouseY = -9999;
+    targetMouseX = -9999;
+    targetMouseY = -9999;
+    running = false;
+    raf = 0;
+    reduced: boolean;
+    io?: IntersectionObserver;
+    onResize: () => void;
+    onVisibility: () => void;
+    onMouseMove: (e: MouseEvent) => void;
+    onMouseLeave: () => void;
+    onMotionChange: (event: MediaQueryListEvent) => void;
+    motionQuery: MediaQueryList;
+
+    constructor(canvas: HTMLCanvasElement) {
+      this.canvas = canvas;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('2d context unavailable');
+      this.ctx = ctx;
+      this.motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      this.reduced = this.motionQuery.matches;
+
+      this.resize();
+      this.seed();
+
+      this.onResize = () => {
+        this.resize();
+        this.seed();
+        if (this.reduced) this.staticFrame();
+      };
+      this.onVisibility = () => {
+        if (document.hidden) this.stop();
+        else if (!this.reduced && this.io) this.start();
+      };
+      this.onMouseMove = (e: MouseEvent) => {
+        const rect = this.canvas.getBoundingClientRect();
+        this.targetMouseX = e.clientX - rect.left;
+        this.targetMouseY = e.clientY - rect.top;
+      };
+      this.onMouseLeave = () => {
+        this.targetMouseX = -9999;
+        this.targetMouseY = -9999;
+      };
+      this.onMotionChange = (event) => {
+        this.reduced = event.matches;
+        if (this.reduced) {
+          this.stop();
+          this.staticFrame();
+        } else if (!document.hidden && this.io) {
+          this.start();
+        }
+      };
+
+      window.addEventListener('resize', this.onResize);
+      document.addEventListener('visibilitychange', this.onVisibility);
+      window.addEventListener('mousemove', this.onMouseMove, { passive: true });
+      document.addEventListener('mouseleave', this.onMouseLeave);
+      this.motionQuery.addEventListener('change', this.onMotionChange);
+
+      if (this.reduced) {
+        this.staticFrame();
+        return;
+      }
+
+      this.io = new IntersectionObserver(
+        (entries) => (entries[0]?.isIntersecting && !document.hidden ? this.start() : this.stop()),
+        { threshold: 0 }
+      );
+      this.io.observe(canvas);
+    }
+
+    colors() {
+      const s = getComputedStyle(document.documentElement);
+      return {
+        trace: s.getPropertyValue('--trace').trim() || '#4fb3aa',
+        signal: s.getPropertyValue('--signal').trim() || '#d9a441',
+      };
+    }
+
+    resize() {
+      const parent = this.canvas.parentElement;
+      if (!parent) return;
+      const rect = parent.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      this.canvas.width = Math.max(1, Math.round(rect.width * dpr));
+      this.canvas.height = Math.max(1, Math.round(rect.height * dpr));
+      this.canvas.style.width = rect.width + 'px';
+      this.canvas.style.height = rect.height + 'px';
+      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      this.w = rect.width;
+      this.h = rect.height;
+    }
+
+    spawn(): Particle {
+      const maxLife = 90 + Math.random() * 150;
+      return {
+        x: Math.random() * this.w,
+        y: Math.random() * this.h,
+        vx: 0,
+        vy: 0,
+        life: maxLife,
+        maxLife,
+        signal: Math.random() < 0.12,
+      };
+    }
+
+    seed() {
+      const count = Math.min(Math.round((this.w * this.h) / 10000), 110);
+      this.particles = Array.from({ length: count }, () => this.spawn());
+    }
+
+    angleAt(x: number, y: number, t: number) {
+      return (Math.sin(x * 0.003 + t * 0.00012) + Math.cos(y * 0.0038 - t * 0.00009)) * Math.PI;
+    }
+
+    step(t: number) {
+      const { trace, signal } = this.colors();
+      const ctx = this.ctx;
+
+      // Smooth mouse follow
+      this.mouseX += (this.targetMouseX - this.mouseX) * 0.1;
+      this.mouseY += (this.targetMouseY - this.mouseY) * 0.1;
+
+      ctx.clearRect(0, 0, this.w, this.h);
+
+      for (const p of this.particles) {
+        let a = this.angleAt(p.x, p.y, t);
+
+        // Mouse attraction/swirl effect within 150px
+        const dx = this.mouseX - p.x;
+        const dy = this.mouseY - p.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 160 && dist > 1) {
+          const mouseAngle = Math.atan2(dy, dx);
+          const influence = (1 - dist / 160) * 0.6;
+          a = a * (1 - influence) + (mouseAngle + Math.PI / 2) * influence;
+        }
+
+        const speed = p.signal ? 0.75 : 0.55;
+        const nx = p.x + Math.cos(a) * speed;
+        const ny = p.y + Math.sin(a) * speed;
+
+        const lifeRatio = p.life / p.maxLife;
+        const fade = Math.sin(lifeRatio * Math.PI); // Smooth fade in and fade out
+        ctx.strokeStyle = p.signal ? signal : trace;
+        ctx.globalAlpha = (p.signal ? 0.45 : 0.22) * fade;
+        ctx.lineWidth = p.signal ? 1.4 : 1.1;
+
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(nx, ny);
+        ctx.stroke();
+
+        p.x = nx;
+        p.y = ny;
+        p.life -= 1;
+
+        if (p.x < 0 || p.x > this.w || p.y < 0 || p.y > this.h || p.life <= 0) {
+          Object.assign(p, this.spawn());
+        }
+      }
+
+      this.drawCenterPulse(ctx, signal, t);
+      ctx.globalAlpha = 1;
+    }
+
+    drawCenterPulse(ctx: CanvasRenderingContext2D, signal: string, t: number) {
+      const phase = (Math.sin(t * 0.002) + 1) / 2;
+      const radius = 3.5 + phase * 2;
+      const alpha = 0.45 + phase * 0.25;
+      const cx = this.w * 0.72;
+      const cy = this.h * 0.48;
+
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = signal;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.globalAlpha = alpha * 0.35;
+      ctx.strokeStyle = signal;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius + 6 + phase * 3, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    staticFrame() {
+      const { trace, signal } = this.colors();
+      const ctx = this.ctx;
+      ctx.clearRect(0, 0, this.w, this.h);
+      for (const p of this.particles) {
+        let { x, y } = p;
+        ctx.strokeStyle = p.signal ? signal : trace;
+        ctx.globalAlpha = p.signal ? 0.35 : 0.16;
+        ctx.lineWidth = 1.1;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        for (let i = 0; i < 24; i++) {
+          const a = this.angleAt(x, y, 0);
+          x += Math.cos(a) * 1.8;
+          y += Math.sin(a) * 1.8;
+          ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+      this.drawCenterPulseStatic(ctx, signal);
+      ctx.globalAlpha = 1;
+    }
+
+    drawCenterPulseStatic(ctx: CanvasRenderingContext2D, signal: string) {
+      const x = this.w * 0.72;
+      const y = this.h * 0.48;
+      ctx.save();
+      ctx.fillStyle = signal;
+      ctx.globalAlpha = 0.48;
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 0.15;
+      ctx.strokeStyle = signal;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(x, y, 9, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    start() {
+      if (this.running || this.reduced || document.hidden) return;
+      this.running = true;
+      const loop = (t: number) => {
+        if (!this.running || this.reduced || document.hidden) return;
+        this.step(t);
+        this.raf = requestAnimationFrame(loop);
+      };
+      this.raf = requestAnimationFrame(loop);
+    }
+
+    stop() {
+      this.running = false;
+      if (this.raf) cancelAnimationFrame(this.raf);
+      this.raf = 0;
+    }
+
+    destroy() {
+      this.stop();
+      this.io?.disconnect();
+      window.removeEventListener('resize', this.onResize);
+      document.removeEventListener('visibilitychange', this.onVisibility);
+      window.removeEventListener('mousemove', this.onMouseMove);
+      document.removeEventListener('mouseleave', this.onMouseLeave);
+      this.motionQuery.removeEventListener('change', this.onMotionChange);
+    }
+  }
+
+  let instance: FlowField | null = null;
+  function boot() {
+    const canvas = document.querySelector<HTMLCanvasElement>('[data-flow-field]');
+    if (!canvas || canvas.dataset.booted === 'true') return;
+    canvas.dataset.booted = 'true';
+    instance = new FlowField(canvas);
+  }
+
+  function schedule() {
+    if ('requestIdleCallback' in window) (window as any).requestIdleCallback(boot, { timeout: 1200 });
+    else setTimeout(boot, 200);
+  }
+
+  schedule();
+  document.addEventListener('astro:page-load', schedule);
+  document.addEventListener('astro:before-swap', () => {
+    instance?.destroy();
+    instance = null;
+  });
+</script>

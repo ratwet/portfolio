@@ -1,0 +1,107 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import CommandPalette from '../components/CommandPalette.astro';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  fullTitle?: string;
+  ogImage?: string;
+  ogImageAlt?: string;
+  structuredData?: Record<string, unknown> | Record<string, unknown>[];
+}
+
+const { title, description, fullTitle, ogImage, ogImageAlt = 'Kaushal Kumar portfolio', structuredData } = Astro.props;
+const pageTitle = fullTitle ?? `${title} | Kaushal Kumar`;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const ogImageURL = new URL(ogImage ?? '/og.png', Astro.site);
+const personSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: 'Kaushal Kumar',
+  url: 'https://kaushal.is-a.dev',
+  jobTitle: 'Mathematics & Computing Student',
+  alumniOf: 'Central University of Jammu',
+  sameAs: ['https://github.com/ratwet', 'https://www.linkedin.com/in/kaushal-kumar-072739206'],
+};
+const schemas = Array.isArray(structuredData) ? structuredData : structuredData ? [structuredData] : [personSchema];
+const serializeJsonLd = (value: Record<string, unknown>) => JSON.stringify(value).replace(/</g, '\\u003c');
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'self'; upgrade-insecure-requests" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <link rel="canonical" href={canonicalURL} />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content="index, follow" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImageURL} />
+    <meta property="og:image:alt" content={ogImageAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageURL} />
+    <link rel="icon" type="image/svg+xml" href="/reticle-mark.svg" />
+    <link rel="mask-icon" href="/reticle-mark.svg" color="#070b14" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#f5f8fc" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#070b14" media="(prefers-color-scheme: dark)" />
+    {schemas.map((schema) => <script type="application/ld+json" set:html={serializeJsonLd(schema)} />)}
+<script>
+  let scrollProgressCleanup: (() => void) | null = null;
+  function initTheme() {
+    try {
+      const stored = localStorage.getItem('theme');
+      const theme = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    } catch {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  }
+
+  function initScrollProgress() {
+    scrollProgressCleanup?.();
+    scrollProgressCleanup = null;
+    const bar = document.querySelector<HTMLElement>('.scroll-progress');
+    if (!bar || CSS.supports('animation-timeline', 'scroll()')) return;
+    const update = () => {
+      const h = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.transform = `scaleX(${h > 0 ? Math.min(window.scrollY / h, 1) : 0})`;
+    };
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+    scrollProgressCleanup = () => window.removeEventListener('scroll', update);
+  }
+
+  initTheme();
+  initScrollProgress();
+  document.addEventListener('astro:page-load', () => {
+    initTheme();
+    initScrollProgress();
+  });
+  document.addEventListener('astro:before-swap', () => scrollProgressCleanup?.());
+</script>
+    <ClientRouter />
+  </head>
+  <body>
+    <div class="aurora" aria-hidden="true"></div>
+    <div class="scroll-progress" aria-hidden="true"></div>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <Nav />
+    <main id="main-content"><slot /></main>
+    <Footer />
+    <CommandPalette />
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
+

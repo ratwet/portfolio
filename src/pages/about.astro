@@ -1,0 +1,140 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const certifications = (await getCollection('certifications')).sort((a, b) =>
+  a.data.date < b.data.date ? 1 : -1
+);
+
+const focusAreas = [
+  { name: 'Computer Vision', cat: 'cv' },
+  { name: 'Machine Learning', cat: 'ml' },
+  { name: 'Embedded Systems', cat: 'iot' },
+  { name: 'Robotics', cat: 'robo' },
+  { name: 'Python / C++', cat: 'data' },
+  { name: 'Technical Mentorship', cat: 'robo' },
+];
+
+const seminars = [
+  {
+    title: 'AI Builders Weekend',
+    org: "Masters' Union",
+    location: 'New Delhi',
+    description:
+      'Deep dive into autonomous agent architecture, tool calling, and ReAct mechanics built from scratch in Python.',
+  },
+  {
+    title: 'National Seminar on AI for Good Governance',
+    org: 'Dr. Ambedkar International Centre',
+    location: 'New Delhi',
+    description:
+      'National deliberations on the India AI Mission, Project Tapestry, distributed AI architectures, DSS Studio, and sovereign computing ethics.',
+  },
+];
+---
+
+<BaseLayout
+  title="About"
+  description="Kaushal Kumar is a Mathematics & Computing student building practical AI, computer vision, edge systems, and robotics."
+>
+  <header class="page-header wrap">
+    <p class="hero-eyebrow">About</p>
+    <h1 class="hero-headline">Curious about systems, serious about learning.</h1>
+    <p class="hero-sub max-w-56ch">
+      I am Kaushal Kumar, a Mathematics &amp; Computing student at Central University of Jammu. I build applied AI, real-time computer vision, edge firmware, and competition robotics. I learn by shipping, profiling, and documenting what I build.
+    </p>
+  </header>
+
+  <section class="wrap">
+    <h2 class="section-heading">Current Direction</h2>
+    <div class="tag-row">
+      {focusAreas.map((area) => (
+        <span class="tag" data-cat={area.cat}>
+          {area.name}
+        </span>
+      ))}
+    </div>
+  </section>
+
+  <section class="wrap">
+    <h2 class="section-heading">Education</h2>
+    <div class="entries">
+      <div class="entry">
+        <div class="entry-meta">
+          <strong>2025–2029</strong>
+          <div>In Progress</div>
+        </div>
+        <div>
+          <h3 class="entry-title">Central University of Jammu</h3>
+          <p class="entry-org">B.Tech · Mathematics &amp; Computing</p>
+          <p class="muted-copy">
+            Linear Algebra · Discrete Mathematics · Data Structures &amp; Algorithms · Computer Organization · Probability &amp; Stochastic Processes
+          </p>
+        </div>
+      </div>
+      <div class="entry">
+        <div class="entry-meta">
+          <strong>Completed</strong>
+          <div>80% Aggregate</div>
+        </div>
+        <div>
+          <h3 class="entry-title">School of Excellence Madanpur Khadar</h3>
+          <p class="entry-org">Senior Secondary · Science Stream (PCM)</p>
+          <p class="muted-copy">
+            Strong foundation in analytical mathematics, mechanics, physics, and computing basics.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <h2 class="section-heading">Credentials &amp; Certifications</h2>
+    <div class="entries">
+      {certifications.map((cert) => (
+        <div class="entry">
+          <div class="entry-meta">
+            <strong>{cert.data.issuer}</strong>
+            <div>{cert.data.dateLabel}</div>
+          </div>
+          <div>
+            <h3 class="entry-title">{cert.data.name}</h3>
+            {cert.data.credentialId && (
+              <p class="entry-org credential-id">
+                ID: {cert.data.credentialId}
+              </p>
+            )}
+            {cert.data.verifyUrl && (
+              <a
+                href={cert.data.verifyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn btn-secondary verify-btn"
+              >
+                Verify Credential ↗
+              </a>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="wrap">
+    <h2 class="section-heading">Seminars &amp; Workshops</h2>
+    <div class="entries">
+      {seminars.map((s) => (
+        <div class="entry">
+          <div class="entry-meta">
+            <strong>{s.location}</strong>
+          </div>
+          <div>
+            <h3 class="entry-title">{s.title}</h3>
+            <p class="entry-org">{s.org}</p>
+            <p class="muted-copy">{s.description}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+</BaseLayout>

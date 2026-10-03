@@ -1,0 +1,132 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const projects = (await getCollection('projects')).sort(
+    (a, b) => a.data.sortOrder - b.data.sortOrder
+  );
+  return projects.map((project, index) => ({
+    params: { slug: project.id },
+    props: {
+      project,
+      prevProject: index > 0 ? projects[index - 1] : null,
+      nextProject: index < projects.length - 1 ? projects[index + 1] : null,
+    },
+  }));
+}
+
+const { project, prevProject, nextProject } = Astro.props;
+const { Content } = await render(project);
+
+const projectSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareSourceCode',
+  name: project.data.title,
+  description: project.data.summary,
+  url: new URL(`/projects/${project.id}/`, Astro.site).toString(),
+  codeRepository: project.data.repoUrl,
+  author: {
+    '@type': 'Person',
+    name: 'Kaushal Kumar',
+    url: 'https://kaushal.is-a.dev',
+  },
+  keywords: project.data.category,
+};
+---
+
+<BaseLayout
+  title={project.data.title}
+  description={project.data.summary}
+  ogImage={project.data.coverImage}
+  structuredData={projectSchema}
+>
+  <article>
+    <!-- Project Header -->
+    <header class="page-header wrap">
+      <div class="project-header-row">
+        <span class="label project-category" data-cat={project.data.category === 'Computer Vision' ? 'cv' : project.data.category === 'Edge & IoT' ? 'iot' : project.data.category === 'Robotics' ? 'robo' : 'data'}>
+          {project.data.category} · {project.data.year} · {project.data.status}
+        </span>
+        <a class="label project-back-link" href="/projects/">
+          ← All Projects
+        </a>
+      </div>
+
+      <h1 class="hero-headline project-title">
+        {project.data.title}
+      </h1>
+      <p class="hero-sub max-w-56ch">
+        {project.data.summary}
+      </p>
+
+      <div class="hero-actions mt-6">
+        {project.data.repoUrl && (
+          <a
+            class="btn btn-primary"
+            href={project.data.repoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`View ${project.data.title} repository (opens in new tab)`}
+          >
+            <span>View Repository</span>
+            <span aria-hidden="true">↗</span>
+          </a>
+        )}
+        <a class="btn btn-secondary" href="/projects/">Back to Work</a>
+      </div>
+
+      <!-- Key Metrics Row -->
+      {project.data.metrics && project.data.metrics.length > 0 && (
+        <div class="meta-row project-metrics">
+          {project.data.metrics.map((m) => (
+            <div class="meta-col">
+              <span class="label">{m.label}</span>
+              <p class="metric-value">
+                {m.value}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </header>
+
+    <!-- Cover Image if present -->
+    {project.data.coverImage && (
+      <div class="wrap project-cover-section">
+        <div class="project-cover-frame">
+          <img
+            src={project.data.coverImage}
+            alt={`${project.data.title} cover`}
+            class="project-cover"
+          />
+        </div>
+      </div>
+    )}
+
+    <!-- Case Study Prose -->
+    <section class="wrap">
+      <div class="prose-wrap case-study-body">
+        <Content />
+      </div>
+    </section>
+
+    <!-- Prev / Next Navigation -->
+    <section class="wrap project-pagination-section">
+      <nav class="project-nav" aria-label="Project pagination">
+        {prevProject ? (
+          <a class="project-nav-link" href={`/projects/${prevProject.id}/`}>
+            <span class="label">← Previous Project</span>
+            <strong class="project-nav-title">{prevProject.data.title}</strong>
+          </a>
+        ) : <div />}
+        {nextProject && (
+          <a class="project-nav-link project-nav-next" href={`/projects/${nextProject.id}/`}>
+            <span class="label">Next Project →</span>
+            <strong class="project-nav-title">{nextProject.data.title}</strong>
+          </a>
+        )}
+      </nav>
+    </section>
+  </article>
+</BaseLayout>

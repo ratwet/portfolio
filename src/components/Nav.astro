@@ -1,0 +1,90 @@
+---
+const path = Astro.url.pathname;
+const isActive = (href: string) => {
+  if (href === '/') return path === '/' ? 'page' : undefined;
+  return path.startsWith(href) ? 'page' : undefined;
+};
+---
+<header class="nav" id="main-nav">
+  <div class="wrap nav-inner" id="site-nav">
+    <a class="brand" href="/" aria-label="Kaushal Kumar - Home">
+      <img src="/reticle-mark.svg" alt="" width="20" height="20" />
+      <span>kaushal kumar</span>
+    </a>
+    <nav class="nav-links" id="primary-nav" aria-label="Primary">
+      <a href="/about/" aria-current={isActive('/about')}>About</a>
+      <a href="/projects/" aria-current={isActive('/projects')}>Work</a>
+      <a href="/experience/" aria-current={isActive('/experience')}>Experience</a>
+      <a href="/media/" aria-current={isActive('/media')}>Media</a>
+      <a href="/contact/" aria-current={isActive('/contact')}>Contact</a>
+    </nav>
+    <div class="nav-actions">
+      <button class="icon-btn mobile-menu-toggle" id="mobile-menu-toggle" type="button" aria-controls="primary-nav" aria-expanded="false">
+        <span aria-hidden="true">☰</span><span class="mobile-menu-label">Menu</span>
+      </button>
+      <button class="icon-btn" id="theme-toggle" type="button" aria-label="Toggle color theme"><span aria-hidden="true">◐</span> Theme</button>
+      <button class="icon-btn palette-trigger" id="palette-trigger" type="button" aria-haspopup="dialog"><span class="palette-shortcut">⌘K</span><span class="palette-label">Search</span></button>
+    </div>
+  </div>
+</header>
+<script>
+  let cleanupNav: (() => void) | null = null;
+
+  function bindNavControls() {
+    cleanupNav?.();
+    cleanupNav = null;
+
+    const toggle = document.getElementById('theme-toggle');
+    const menu = document.getElementById('mobile-menu-toggle');
+    const nav = document.getElementById('site-nav');
+    const header = document.getElementById('main-nav');
+
+    if (toggle) {
+      const onThemeToggle = () => {
+        const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        try { localStorage.setItem('theme', next); } catch {}
+      };
+      toggle.addEventListener('click', onThemeToggle);
+      cleanupNav = () => toggle.removeEventListener('click', onThemeToggle);
+    }
+
+    if (menu && nav) {
+      const onMenuClick = () => {
+        const open = nav.classList.toggle('nav-open');
+        menu.setAttribute('aria-expanded', String(open));
+      };
+      const onNavClick = (event: Event) => {
+        if ((event.target as Element | null)?.closest('.nav-links a')) {
+          nav.classList.remove('nav-open');
+          menu.setAttribute('aria-expanded', 'false');
+        }
+      };
+      menu.addEventListener('click', onMenuClick);
+      nav.addEventListener('click', onNavClick);
+      const previous = cleanupNav;
+      cleanupNav = () => {
+        previous?.();
+        menu.removeEventListener('click', onMenuClick);
+        nav.removeEventListener('click', onNavClick);
+      };
+    }
+
+    if (header) {
+      const onScroll = () => {
+        header.classList.toggle('nav-scrolled', window.scrollY > 16);
+      };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+      const previous = cleanupNav;
+      cleanupNav = () => {
+        previous?.();
+        window.removeEventListener('scroll', onScroll);
+      };
+    }
+  }
+
+  bindNavControls();
+  document.addEventListener('astro:page-load', bindNavControls);
+  document.addEventListener('astro:before-swap', () => cleanupNav?.());
+</script>
