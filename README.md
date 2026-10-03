@@ -1,32 +1,38 @@
-# Kaushal Kumar — Portfolio
+# Kaushal Kumar Portfolio
 
-Personal portfolio of **Kaushal Kumar**, focused on applied AI, computer vision, embedded systems, robotics, and software engineering.
+Personal portfolio of Kaushal Kumar, focused on applied AI, computer vision, embedded systems, robotics, and software engineering.
 
-🌐 Live site: https://kaushal.is-a.dev
+Website: https://kaushal.is-a.dev
 
-## Stack
+## Technology
+
 - Astro
 - TypeScript
-- Vanilla CSS
+- CSS
 - Fontsource Geist
 - GitHub Actions
 - GitHub Pages
 
 ## Local development
+
 ```bash
 npm install
 npm run dev
 ```
 
 ## Validation
+
 ```bash
 npm run check
 npm run build
-npm run preview
+node scripts/check-dist.mjs
+npm audit --audit-level=high
 ```
 
 ## Deployment
-Pushes to `main` are built and deployed to GitHub Pages through GitHub Actions. The production domain is `kaushal.is-a.dev`.
+
+Changes pushed to the `main` branch are built and deployed to GitHub Pages using GitHub Actions. The production domain is `kaushal.is-a.dev`.
 
 ## License
+
 MIT
