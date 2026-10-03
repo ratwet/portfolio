@@ -19,11 +19,11 @@ const isActive = (href: string) => {
       <a href="/contact/" aria-current={isActive('/contact')}>Contact</a>
     </nav>
     <div class="nav-actions">
-      <button class="icon-btn mobile-menu-toggle" id="mobile-menu-toggle" type="button" aria-controls="primary-nav" aria-expanded="false">
+      <button class="icon-btn mobile-menu-toggle" id="mobile-menu-toggle" type="button" aria-controls="primary-nav" aria-expanded="false" aria-label="Toggle navigation menu">
         <span aria-hidden="true">☰</span><span class="mobile-menu-label">Menu</span>
       </button>
-      <button class="icon-btn" id="theme-toggle" type="button" aria-label="Toggle color theme"><span aria-hidden="true">◐</span> Theme</button>
-      <button class="icon-btn palette-trigger" id="palette-trigger" type="button" aria-haspopup="dialog"><span class="palette-shortcut">⌘K</span><span class="palette-label">Search</span></button>
+      <button class="icon-btn" id="theme-toggle" type="button" aria-label="Toggle color theme"><span aria-hidden="true">◐</span><span class="theme-text"> Theme</span></button>
+      <button class="icon-btn palette-trigger" id="palette-trigger" type="button" aria-haspopup="dialog" aria-label="Search and command palette"><span class="palette-shortcut">⌘K</span><span class="palette-icon" aria-hidden="true">⌕</span><span class="palette-label">Search</span></button>
     </div>
   </div>
 </header>
@@ -40,10 +40,18 @@ const isActive = (href: string) => {
     const header = document.getElementById('main-nav');
 
     if (toggle) {
+      const updateIcon = () => {
+        const current = document.documentElement.getAttribute('data-theme');
+        const icon = toggle.querySelector('[aria-hidden]');
+        if (icon) icon.textContent = current === 'dark' ? '☀' : '◐';
+      };
+      updateIcon();
       const onThemeToggle = () => {
         const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', next);
+        document.documentElement.style.colorScheme = next;
         try { localStorage.setItem('theme', next); } catch {}
+        updateIcon();
       };
       toggle.addEventListener('click', onThemeToggle);
       cleanupNav = () => toggle.removeEventListener('click', onThemeToggle);

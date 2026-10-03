@@ -35,7 +35,7 @@ const serializeJsonLd = (value: Record<string, unknown>) => JSON.stringify(value
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'self'; upgrade-insecure-requests" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'self'; upgrade-insecure-requests" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <link rel="canonical" href={canonicalURL} />
     <title>{pageTitle}</title>
@@ -57,15 +57,20 @@ const serializeJsonLd = (value: Record<string, unknown>) => JSON.stringify(value
     <meta name="theme-color" content="#f5f8fc" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#070b14" media="(prefers-color-scheme: dark)" />
     {schemas.map((schema) => <script type="application/ld+json" set:html={serializeJsonLd(schema)} />)}
+    <noscript><style>.reveal { opacity: 1 !important; transform: none !important; }</style></noscript>
 <script>
   let scrollProgressCleanup: (() => void) | null = null;
+  let scrollRevealCleanup: (() => void) | null = null;
+
   function initTheme() {
     try {
       const stored = localStorage.getItem('theme');
       const theme = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
       document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.style.colorScheme = theme;
     } catch {
       document.documentElement.setAttribute('data-theme', 'dark');
+      document.documentElement.style.colorScheme = 'dark';
     }
   }
 
@@ -83,13 +88,42 @@ const serializeJsonLd = (value: Record<string, unknown>) => JSON.stringify(value
     scrollProgressCleanup = () => window.removeEventListener('scroll', update);
   }
 
+  function initScrollReveal() {
+    scrollRevealCleanup?.();
+    scrollRevealCleanup = null;
+    if (CSS.supports('animation-timeline', 'view()') || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.querySelectorAll('.reveal').forEach((el) => el.classList.add('revealed'));
+      return;
+    }
+    const elements = document.querySelectorAll<HTMLElement>('.reveal:not(.revealed)');
+    if (!('IntersectionObserver' in window)) {
+      elements.forEach((el) => el.classList.add('revealed'));
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+    elements.forEach((el) => observer.observe(el));
+    scrollRevealCleanup = () => observer.disconnect();
+  }
+
   initTheme();
   initScrollProgress();
+  initScrollReveal();
   document.addEventListener('astro:page-load', () => {
     initTheme();
     initScrollProgress();
+    initScrollReveal();
   });
-  document.addEventListener('astro:before-swap', () => scrollProgressCleanup?.());
+  document.addEventListener('astro:before-swap', () => {
+    scrollProgressCleanup?.();
+    scrollRevealCleanup?.();
+  });
 </script>
     <ClientRouter />
   </head>

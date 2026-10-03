@@ -16,88 +16,124 @@ const pages = [
   </div>
 </div>
 <script>
-  const backdrop = () => document.getElementById('palette-backdrop');
-  const input = () => document.getElementById('palette-input') as HTMLInputElement | null;
-  const items = () => [...document.querySelectorAll<HTMLAnchorElement>('#palette-list .palette-item')].filter((a) => !(a.closest('li') as HTMLLIElement | null)?.hidden);
-  let previousFocus: HTMLElement | null = null;
-  let activeIndex = 0;
+  let paletteCleanup: (() => void) | null = null;
 
-  const close = () => {
-    backdrop()?.setAttribute('data-open', 'false');
-    previousFocus?.focus();
-    previousFocus = null;
-  };
-  const setActive = (index: number) => {
-    const visible = items();
-    if (!visible.length) return;
-    activeIndex = (index + visible.length) % visible.length;
-    visible.forEach((item, i) => item.setAttribute('aria-current', i === activeIndex ? 'true' : 'false'));
-    visible[activeIndex]?.focus();
-  };
-  const open = () => {
-    const b = backdrop();
-    if (!b) return;
-    previousFocus = document.activeElement as HTMLElement | null;
-    b.setAttribute('data-open', 'true');
-    const i = input();
-    if (i) { i.value = ''; i.focus(); }
-    activeIndex = 0;
-  };
-  const filter = (q: string) => {
-    document.querySelectorAll<HTMLElement>('#palette-list li').forEach((li) => {
-      const a = li.querySelector<HTMLAnchorElement>('.palette-item');
-      li.hidden = !(a?.dataset.label ?? '').includes(q.trim().toLowerCase());
-    });
-    activeIndex = 0;
-  };
+  function initPalette() {
+    paletteCleanup?.();
+    paletteCleanup = null;
 
-  function bind() {
-    const b = backdrop(), i = input(), t = document.getElementById('palette-trigger');
-    if (t && t.dataset.bound !== 'true') { t.dataset.bound = 'true'; t.addEventListener('click', open); }
-    if (b && b.dataset.bound !== 'true') {
-      b.dataset.bound = 'true';
-      b.addEventListener('click', (e) => { if (e.target === b) close(); });
-      b.querySelector('.palette')?.addEventListener('keydown', (event) => {
-        const e = event as KeyboardEvent;
-        if (e.key === 'Escape') { e.preventDefault(); close(); return; }
-        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-          e.preventDefault();
-          const visible = items();
-          const focused = document.activeElement as HTMLAnchorElement | null;
-          const current = focused ? visible.indexOf(focused) : -1;
-          setActive(e.key === 'ArrowDown' ? current + 1 : current - 1);
-          return;
-        }
-        if (e.key === 'Tab') {
-          const focusable = [i, ...items()].filter(Boolean) as HTMLElement[];
-          if (!focusable.length) return;
-          const first = focusable[0], last = focusable[focusable.length - 1];
-          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-        }
+    const backdrop = document.getElementById('palette-backdrop');
+    const inputEl = document.getElementById('palette-input') as HTMLInputElement | null;
+    const trigger = document.getElementById('palette-trigger');
+    const paletteEl = backdrop?.querySelector('.palette');
+    let previousFocus: HTMLElement | null = null;
+    let activeIndex = 0;
+
+    if (!backdrop || !inputEl) return;
+
+    const getItems = () =>
+      [...document.querySelectorAll<HTMLAnchorElement>('#palette-list .palette-item')]
+        .filter((a) => !(a.closest('li') as HTMLLIElement | null)?.hidden);
+
+    const close = () => {
+      backdrop.setAttribute('data-open', 'false');
+      previousFocus?.focus();
+      previousFocus = null;
+    };
+
+    const setActive = (index: number) => {
+      const visible = getItems();
+      if (!visible.length) return;
+      activeIndex = (index + visible.length) % visible.length;
+      visible.forEach((item, i) => item.setAttribute('aria-current', i === activeIndex ? 'true' : 'false'));
+      visible[activeIndex]?.focus();
+    };
+
+    const open = () => {
+      previousFocus = document.activeElement as HTMLElement | null;
+      backdrop.setAttribute('data-open', 'true');
+      inputEl.value = '';
+      filter('');
+      inputEl.focus();
+      activeIndex = 0;
+    };
+
+    const filter = (q: string) => {
+      document.querySelectorAll<HTMLElement>('#palette-list li').forEach((li) => {
+        const a = li.querySelector<HTMLAnchorElement>('.palette-item');
+        li.hidden = !(a?.dataset.label ?? '').includes(q.trim().toLowerCase());
       });
-    }
-    if (i && i.dataset.bound !== 'true') {
-      i.dataset.bound = 'true';
-      i.addEventListener('input', () => filter(i.value));
-      i.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { const a = items()[activeIndex]; if (a) { e.preventDefault(); close(); a.click(); } }
-        if (e.key === 'ArrowDown') { e.preventDefault(); setActive(0); }
-        if (e.key === 'ArrowUp') { e.preventDefault(); setActive(items().length - 1); }
-      });
-    }
-  }
+      activeIndex = 0;
+    };
 
-  if (!(window as any).__paletteKeysBound) {
-    (window as any).__paletteKeysBound = true;
-    document.addEventListener('keydown', (e) => {
+    // Trigger button
+    const onTriggerClick = () => open();
+    if (trigger) trigger.addEventListener('click', onTriggerClick);
+
+    // Backdrop click to close
+    const onBackdropClick = (e: Event) => { if (e.target === backdrop) close(); };
+    backdrop.addEventListener('click', onBackdropClick);
+
+    // Palette keyboard navigation
+    const onPaletteKeydown = (event: Event) => {
+      const e = event as KeyboardEvent;
+      if (e.key === 'Escape') { e.preventDefault(); close(); return; }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const visible = getItems();
+        const focused = document.activeElement as HTMLAnchorElement | null;
+        const current = focused ? visible.indexOf(focused) : -1;
+        setActive(e.key === 'ArrowDown' ? current + 1 : current - 1);
+        return;
+      }
+      if (e.key === 'Tab') {
+        const focusable = [inputEl, ...getItems()].filter(Boolean) as HTMLElement[];
+        if (!focusable.length) return;
+        const first = focusable[0], last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    };
+    if (paletteEl) paletteEl.addEventListener('keydown', onPaletteKeydown);
+
+    // Input filtering and navigation
+    const onInput = () => filter(inputEl.value);
+    inputEl.addEventListener('input', onInput);
+
+    const onInputKeydown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') { const a = getItems()[activeIndex]; if (a) { e.preventDefault(); close(); a.click(); } }
+      if (e.key === 'ArrowDown') { e.preventDefault(); setActive(0); }
+      if (e.key === 'ArrowUp') { e.preventDefault(); setActive(getItems().length - 1); }
+    };
+    inputEl.addEventListener('keydown', onInputKeydown);
+
+    // Global keyboard shortcut (Ctrl/Cmd + K and /)
+    const onGlobalKeydown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       const typing = target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable;
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); backdrop()?.getAttribute('data-open') === 'true' ? close() : open(); }
-      else if (e.key === 'Escape' && backdrop()?.getAttribute('data-open') === 'true') close();
-      else if (e.key === '/' && !typing && backdrop()?.getAttribute('data-open') !== 'true') { e.preventDefault(); open(); }
-    });
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        backdrop.getAttribute('data-open') === 'true' ? close() : open();
+      } else if (e.key === 'Escape' && backdrop.getAttribute('data-open') === 'true') {
+        close();
+      } else if (e.key === '/' && !typing && backdrop.getAttribute('data-open') !== 'true') {
+        e.preventDefault();
+        open();
+      }
+    };
+    document.addEventListener('keydown', onGlobalKeydown);
+
+    paletteCleanup = () => {
+      if (trigger) trigger.removeEventListener('click', onTriggerClick);
+      backdrop.removeEventListener('click', onBackdropClick);
+      if (paletteEl) paletteEl.removeEventListener('keydown', onPaletteKeydown);
+      inputEl.removeEventListener('input', onInput);
+      inputEl.removeEventListener('keydown', onInputKeydown);
+      document.removeEventListener('keydown', onGlobalKeydown);
+    };
   }
-  bind();
-  document.addEventListener('astro:page-load', bind);
+
+  initPalette();
+  document.addEventListener('astro:page-load', initPalette);
+  document.addEventListener('astro:before-swap', () => paletteCleanup?.());
 </script>

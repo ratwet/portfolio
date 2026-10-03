@@ -15,16 +15,16 @@
   --glass-blur: 16px;
   --glass-shadow: 0 8px 32px -8px rgba(0, 20, 40, 0.1);
 
-  /* ── Signal palette ── */
-  --signal: #d9a441;
-  --trace: #4fb3aa;
-  --pulse: #e2654a;
-  --volt: #6f8cff;
-  --spark: #7fc86b;
+  /* ── Signal palette (refined for vibrancy) ── */
+  --signal: #e4a832;
+  --trace: #3dcfbc;
+  --pulse: #f06449;
+  --volt: #7b95ff;
+  --spark: #6dd56b;
 
   /* ── Text-safe variants (WCAG AA 4.5:1 on light bg) ── */
   --signal-text: #8e661c;
-  --trace-text: #267a73;
+  --trace-text: #1a8a7f;
   --pulse-text: #c53d20;
   --volt-text: #2d57ff;
   --spark-text: #3d782c;
@@ -35,20 +35,21 @@
   --color-pulse: var(--pulse);
   --color-volt: var(--volt);
   --color-spark: var(--spark);
-  --color-signal-dim: rgba(217, 164, 65, 0.12);
+  --color-signal-dim: rgba(228, 168, 50, 0.12);
   --color-success: #2c7757;
   --color-danger: #b0432d;
 
-  /* ── Aurora mesh ── */
-  --aurora-teal: rgba(79, 179, 170, 0.09);
-  --aurora-blue: rgba(111, 140, 255, 0.07);
-  --aurora-amber: rgba(217, 164, 65, 0.04);
+  /* ── Aurora mesh (enhanced for light mode) ── */
+  --aurora-teal: rgba(61, 207, 188, 0.1);
+  --aurora-blue: rgba(123, 149, 255, 0.08);
+  --aurora-amber: rgba(228, 168, 50, 0.05);
   --dot-color: rgba(0, 20, 40, 0.045);
 
-  /* ── Gradients ── */
-  --gradient-text: linear-gradient(135deg, var(--trace), var(--volt));
-  --gradient-accent: linear-gradient(135deg, var(--signal), #e8a832);
-  --gradient-border: linear-gradient(135deg, rgba(79,179,170,0.4), rgba(111,140,255,0.3), rgba(217,164,65,0.3));
+  /* ── Gradients (more vibrant) ── */
+  --gradient-text: linear-gradient(135deg, var(--trace), var(--volt), var(--signal));
+  --gradient-accent: linear-gradient(135deg, var(--signal), #f0b830, var(--pulse));
+  --gradient-border: linear-gradient(135deg, rgba(61,207,188,0.4), rgba(123,149,255,0.3), rgba(228,168,50,0.3));
+  --gradient-glow: linear-gradient(135deg, rgba(61,207,188,0.25), rgba(123,149,255,0.2));
 
   /* ── Typography ── */
   --font-sans: 'Geist Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
@@ -59,7 +60,7 @@
   --step-2: 1.4375rem;
   --step-3: 1.8125rem;
   --step-4: 2.25rem;
-  --step-5: clamp(2.75rem, 5vw + 1rem, 4.5rem);
+  --step-5: clamp(2.15rem, 5vw + 1rem, 4.5rem);
 
   /* ── Spacing ── */
   --space-1: 0.25rem;
@@ -113,13 +114,13 @@
   --volt-text: var(--volt);
   --spark-text: var(--spark);
 
-  --color-signal-dim: rgba(217, 164, 65, 0.1);
+  --color-signal-dim: rgba(228, 168, 50, 0.1);
   --color-success: #5cc999;
   --color-danger: #ef8a72;
 
-  --aurora-teal: rgba(79, 179, 170, 0.2);
-  --aurora-blue: rgba(111, 140, 255, 0.16);
-  --aurora-amber: rgba(217, 164, 65, 0.1);
+  --aurora-teal: rgba(61, 207, 188, 0.22);
+  --aurora-blue: rgba(123, 149, 255, 0.18);
+  --aurora-amber: rgba(228, 168, 50, 0.12);
   --dot-color: rgba(255, 255, 255, 0.05);
 
   --shadow-panel: 0 8px 28px -8px rgba(0, 0, 0, 0.5);
