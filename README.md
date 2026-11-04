@@ -9,7 +9,7 @@ Website: https://kaushal.is-a.dev
 - Astro
 - TypeScript
 - CSS
-- Fontsource Geist
+- Fontsource Inter
 - GitHub Actions
 - GitHub Pages
 

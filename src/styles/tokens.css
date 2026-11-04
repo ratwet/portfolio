@@ -52,7 +52,7 @@
   --gradient-glow: linear-gradient(135deg, rgba(61,207,188,0.25), rgba(123,149,255,0.2));
 
   /* ── Typography ── */
-  --font-sans: 'Geist Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-sans: 'Inter Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --font-mono: 'Geist Mono Variable', ui-monospace, 'SFMono-Regular', Consolas, monospace;
   --step--1: 0.8125rem;
   --step-0: 1rem;

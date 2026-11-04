@@ -22,11 +22,10 @@ const isActive = (href: string) => {
       <button class="icon-btn mobile-menu-toggle" id="mobile-menu-toggle" type="button" aria-controls="primary-nav" aria-expanded="false" aria-label="Toggle navigation menu">
         <span aria-hidden="true">☰</span><span class="mobile-menu-label">Menu</span>
       </button>
-      <button class="icon-btn" id="theme-toggle" type="button" aria-label="Toggle color theme"><span aria-hidden="true">◐</span><span class="theme-text"> Theme</span></button>
-      <button class="icon-btn palette-trigger" id="palette-trigger" type="button" aria-haspopup="dialog" aria-label="Search and command palette"><span class="palette-shortcut">⌘K</span><span class="palette-icon" aria-hidden="true">⌕</span><span class="palette-label">Search</span></button>
     </div>
   </div>
 </header>
+<button class="icon-btn theme-corner-btn" id="theme-toggle" type="button" aria-label="Toggle color theme"><span aria-hidden="true">◐</span></button>
 <script>
   let cleanupNav: (() => void) | null = null;
 

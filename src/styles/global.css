@@ -1,4 +1,4 @@
-@import '@fontsource-variable/geist';
+@import '@fontsource-variable/inter';
 @import '@fontsource-variable/geist-mono';
 @import './tokens.css';
 
@@ -281,15 +281,25 @@ section + section {
 .palette-label { display: none; }
 .palette-icon { display: none; }
 
+/* ── Theme corner button (fixed to top-right corner) ── */
+.theme-corner-btn {
+  position: fixed;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: 50;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  font-size: 1.25rem;
+  border-radius: 50%;
+}
+
 /* ── Mobile Nav ── */
 @media (max-width: 640px) {
-  .nav-actions { gap: var(--space-2); }
+  .nav-actions { gap: var(--space-2); margin-right: calc(36px + var(--space-2)); }
   .mobile-menu-toggle { display: inline-flex; padding: var(--space-2); }
   .mobile-menu-label { display: none; }
-  .theme-text { display: none; }
-  .palette-trigger { display: inline-flex; padding: var(--space-2); }
-  .palette-shortcut { display: none; }
-  .palette-icon { display: inline; font-size: 1.1em; line-height: 1; }
+  .theme-corner-btn { top: var(--space-2); right: var(--space-2); width: 36px; height: 36px; font-size: 1.1rem; }
   .nav-links {
     display: flex;
     position: absolute;
